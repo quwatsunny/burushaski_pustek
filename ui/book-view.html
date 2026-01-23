@@ -766,7 +766,6 @@
             <button class="view-btn" onclick="printBook()">🖨️ Print</button>
             <button class="view-btn" onclick="exportBookToWord()">Export Word</button>
             <button class="view-btn" onclick="exportBookToPdf()">Export PDF</button>
-            <button class="view-btn" onclick="exportBookToEpub()">Export EPUB</button>
         </div>
     </div>
 
@@ -1560,21 +1559,6 @@
             }
         }
 
-        function exportBookToEpub() {
-            const { bookTitle, chapters } = getBookExportData();
-            if (window.pywebview && window.pywebview.api && window.pywebview.api.export_epub) {
-                window.pywebview.api.export_epub(bookTitle, chapters)
-                    .then(res => {
-                        if (res && res.success) {
-                            alert('EPUB file exported successfully!');
-                        } else {
-                            alert('EPUB export failed: ' + (res && res.error ? res.error : 'Unknown error'));
-                        }
-                    });
-            } else {
-                alert('EPUB export not available in this environment.');
-            }
-        }
     </script>
 </body>
 </html>
