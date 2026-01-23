@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Metadata - Girmin</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .metadata-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #fff;
+        }
+        
+        .metadata-header {
+            margin-bottom: 32px;
+        }
+        
+        .metadata-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 8px 0;
+        }
+        
+        .metadata-header p {
+            color: #86868b;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .metadata-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0071e3;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+        }
+        
+        .btn-secondary:hover {
+            background: #e8e8ed;
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #0071e3;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 16px 0 12px 0;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .section-title:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .metadata-container {
+                margin: 20px;
+                padding: 24px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body style="overflow-y: auto; height: auto;">
+    <div class="metadata-container">
+        <a href="editor.html" class="back-link">← Back to Editor</a>
+        
+        <div class="metadata-header">
+            <h1>Book Metadata</h1>
+            <p>Enter information about your book</p>
+        </div>
+        
+        <form class="metadata-form" id="metadataForm">
+            <h3 class="section-title">Basic Information</h3>
+            
+            <div class="form-group">
+                <label for="bookTitle">Title *</label>
+                <input type="text" id="bookTitle" name="title" placeholder="Enter book title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="bookSubtitle">Subtitle</label>
+                <input type="text" id="bookSubtitle" name="subtitle" placeholder="Enter subtitle (optional)">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookAuthor">Author *</label>
+                    <input type="text" id="bookAuthor" name="author" placeholder="Author name" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookLanguage">Language</label>
+                    <select id="bookLanguage" name="language">
+                        <option value="burushaski">Burushaski</option>
+                        <option value="burushaski-yasin">Burushaski (Yasin)</option>
+                        <option value="burushaski-hunza">Burushaski (Hunza)</option>
+                        <option value="english">English</option>
+                        <option value="urdu">Urdu</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="bookSummary">Summary / Description</label>
+                <textarea id="bookSummary" name="summary" placeholder="Brief description of the book..."></textarea>
+            </div>
+            
+            <h3 class="section-title">Publication Details</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookPublisher">Publisher</label>
+                    <input type="text" id="bookPublisher" name="publisher" placeholder="Publisher name">
+                </div>
+                <div class="form-group">
+                    <label for="bookYear">Year</label>
+                    <input type="number" id="bookYear" name="year" placeholder="Publication year" min="1900" max="2100">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookISBN">ISBN</label>
+                    <input type="text" id="bookISBN" name="isbn" placeholder="ISBN number">
+                </div>
+                <div class="form-group">
+                    <label for="bookEdition">Edition</label>
+                    <input type="text" id="bookEdition" name="edition" placeholder="e.g., First Edition">
+                </div>
+            </div>
+            
+            <h3 class="section-title">Additional Information</h3>
+            
+            <div class="form-group">
+                <label for="bookGenre">Genre / Category</label>
+                <select id="bookGenre" name="genre">
+                    <option value="">Select genre...</option>
+                    <option value="fiction">Fiction</option>
+                    <option value="non-fiction">Non-Fiction</option>
+                    <option value="poetry">Poetry</option>
+                    <option value="folklore">Folklore</option>
+                    <option value="history">History</option>
+                    <option value="linguistics">Linguistics</option>
+                    <option value="religious">Religious</option>
+                    <option value="educational">Educational</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="bookKeywords">Keywords / Tags</label>
+                <input type="text" id="bookKeywords" name="keywords" placeholder="Comma-separated keywords">
+            </div>
+            
+            <div class="form-group">
+                <label for="bookNotes">Notes</label>
+                <textarea id="bookNotes" name="notes" placeholder="Additional notes..."></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Metadata</button>
+                <a href="editor.html" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        const METADATA_KEY = 'girmin_book_metadata';
+        const AUTOSAVE_KEY = 'girmin_book_autosave';
+        
+        // Check if this is a new book creation
+        const urlParams = new URLSearchParams(window.location.search);
+        const isNewBook = urlParams.get('new') === 'true';
+        
+        // Load existing metadata
+        function loadMetadata() {
+            // If new book, start fresh
+            if (isNewBook) {
+                document.querySelector('.metadata-header h1').textContent = 'Create New Book';
+                document.querySelector('.metadata-header p').textContent = 'Enter information for your new book';
+                return;
+            }
+            
+            // First try dedicated metadata storage
+            let metadata = JSON.parse(localStorage.getItem(METADATA_KEY) || '{}');
+            
+            // Also check autosave for title/author/summary
+            const autosave = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || '{}');
+            if (autosave.title && !metadata.title) metadata.title = autosave.title;
+            if (autosave.author && !metadata.author) metadata.author = autosave.author;
+            if (autosave.summary && !metadata.summary) metadata.summary = autosave.summary;
+            
+            // Populate form
+            Object.keys(metadata).forEach(key => {
+                const field = document.getElementById('book' + key.charAt(0).toUpperCase() + key.slice(1));
+                if (field && metadata[key]) {
+                    field.value = metadata[key];
+                }
+            });
+        }
+        
+        // Save metadata
+        function saveMetadata(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById('metadataForm');
+            const formData = new FormData(form);
+            const metadata = {};
+            
+            formData.forEach((value, key) => {
+                if (value) metadata[key] = value;
+            });
+            
+            // Validate required fields
+            if (!metadata.title || !metadata.author) {
+                alert('Please fill in the required fields (Title and Author).');
+                return;
+            }
+            
+            // Save to dedicated metadata storage
+            localStorage.setItem(METADATA_KEY, JSON.stringify(metadata));
+            
+            // Create new book structure if this is a new book
+            if (isNewBook) {
+                const newBook = {
+                    title: metadata.title,
+                    author: metadata.author,
+                    summary: metadata.summary || '',
+                    chapters: [{ 
+                        title: 'Chapter 1', 
+                        paragraphs: [{ title: 'Paragraph 1', content: '' }],
+                        footnotes: []
+                    }],
+                    references: [],
+                    currentChapter: 0,
+                    currentParagraph: 0
+                };
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(newBook));
+            } else {
+                // Update existing autosave with title, author, summary
+                const autosave = JSON.parse(localStorage.getItem(AUTOSAVE_KEY) || '{}');
+                if (metadata.title) autosave.title = metadata.title;
+                if (metadata.author) autosave.author = metadata.author;
+                if (metadata.summary) autosave.summary = metadata.summary;
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(autosave));
+            }
+            
+            window.location.href = 'editor.html';
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadMetadata);
+        document.getElementById('metadataForm').addEventListener('submit', saveMetadata);
+    </script>
+</body>
+</html>

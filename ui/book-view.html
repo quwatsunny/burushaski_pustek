@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Viewer</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/toc-book.css">
+    <script src="assets/js/html2pdf.bundle.min.js"></script>
+    <style>
+                /* --- PRINT STYLES FOR PROFESSIONAL PRINTING --- */
+                @media print {
+                    body {
+                        background: #fff !important;
+                        color: #232323 !important;
+                        font-family: 'Merriweather', 'Noto Serif', Georgia, serif !important;
+                    }
+                    .top-bar, .view-btn, .no-book-message, .page-number, .ipa-context-menu, .ipa-notification {
+                        display: none !important;
+                    }
+                    .main-content {
+                        margin: 0 !important;
+                        padding: 0 !important;
+                    }
+                    .book-container {
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                        max-width: none !important;
+                        margin: 0 !important;
+                        width: 100% !important;
+                    }
+                    .book-cover {
+                        page-break-after: always !important;
+                        background: #fff !important;
+                        min-height: 0 !important;
+                        padding: 80px 0 60px 0 !important;
+                    }
+                    .book-content, .book-front-matter, .book-back-matter {
+                        padding: 0 2.5cm !important;
+                        margin: 0 !important;
+                    }
+                    .chapter-title, .book-content h1, .book-front-matter .section-title, .book-back-matter .section-title {
+                        page-break-before: always;
+                        margin-top: 3cm !important;
+                        margin-bottom: 1.5cm !important;
+                    }
+                    .chapter-title:first-child, .book-content h1:first-child, .book-front-matter .section-title:first-child {
+                        page-break-before: avoid;
+                    }
+                    .book-content p, .book-content div, .book-front-matter .section-content, .book-back-matter .section-content {
+                        font-size: 12pt !important;
+                        line-height: 1.6 !important;
+                        text-align: justify !important;
+                        text-indent: 1.2em !important;
+                        margin-bottom: 1.2em !important;
+                    }
+                    .book-content h2, .book-content h3 {
+                        page-break-after: avoid;
+                    }
+                    .references-section, .footnotes-section {
+                        page-break-before: always;
+                    }
+                    @page {
+                        size: A4;
+                        margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+                    }
+                }
+        body {
+            font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
+            background: #faf9f6;
+            color: #232323;
+            line-height: 1.8;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .top-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 1000;
+        }
+        .top-bar-left, .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: #8b4513;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .back-btn:hover {
+            background: #f5f1eb;
+        }
+        .book-title-bar {
+            color: #232323;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+        .view-btn {
+            background: none;
+            border: 1px solid #e0d8c8;
+            color: #8b4513;
+            font-size: 15px;
+            cursor: pointer;
+            padding: 7px 18px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .view-btn.active, .view-btn:hover {
+            background: #f5f1eb;
+            border-color: #d4c4a8;
+        }
+        .main-content {
+            margin-top: 56px;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .book-container {
+            width: 100%;
+            max-width: 720px;
+            background: #fff;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.06);
+            border-radius: 18px;
+            margin: 48px 0 48px 0;
+            overflow: hidden;
+            min-height: 60vh;
+        }
+        .book-cover {
+            padding: 80px 40px 60px 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #faf9f6 0%, #f5f1eb 100%);
+            border-bottom: none;
+            min-height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .book-cover h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #232323;
+            margin-bottom: 18px;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+        }
+        .book-cover .subtitle {
+            font-size: 1.2rem;
+            color: #8b4513;
+            font-style: italic;
+            margin-bottom: 32px;
+        }
+        .book-cover .author {
+            font-size: 1.1rem;
+            color: #b07d4a;
+            margin-top: 18px;
+        }
+        .book-cover .publisher {
+            font-size: 0.95rem;
+            color: #bdbdbd;
+            margin-top: 40px;
+        }
+        .book-content, .book-front-matter, .book-back-matter {
+            padding: 48px 32px;
+        }
+        .book-content.rtl, .book-front-matter.rtl, .book-back-matter.rtl {
+            direction: rtl;
+            font-family: 'Noto Nastaliq Urdu', 'Amiri', serif;
+        }
+        .chapter-title, .book-content h1, .book-front-matter .section-title, .book-back-matter .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #232323;
+            margin: 48px 0 24px 0;
+            text-align: center;
+            border: none;
+            padding: 0;
+            letter-spacing: 0.01em;
+        }
+        .book-content h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #8b4513;
+            margin: 36px 0 18px 0;
+        }
+        .book-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #b07d4a;
+            margin: 28px 0 12px 0;
+        }
+        .book-content p, .book-content div, .book-front-matter .section-content, .book-back-matter .section-content {
+            margin-bottom: 1.7em;
+            text-align: justify;
+            text-indent: 2em;
+            font-size: 1.08rem;
+            letter-spacing: 0.01em;
+        }
+        .book-content p:first-child, .book-content div:first-child {
+            text-indent: 0;
+        }
+        .page-number {
+            text-align: center;
+            color: #bdbdbd;
+            font-size: 1rem;
+            padding: 32px 0 0 0;
+            border: none;
+            margin-top: 48px;
+        }
+        .no-book-message {
+            text-align: center;
+            padding: 120px 40px;
+            color: #bdbdbd;
+        }
+        .no-book-message h2 {
+            margin-bottom: 18px;
+            color: #8b4513;
+            font-size: 2rem;
+        }
+        .no-book-message a {
+            color: #8b4513;
+            text-decoration: underline;
+        }
+        .no-book-message a:hover {
+            color: #b07d4a;
+        }
+        @media (max-width: 900px) {
+            .book-container { max-width: 98vw; margin: 32px 0; }
+            .book-content, .book-front-matter, .book-back-matter { padding: 32px 8vw; }
+        }
+        @media (max-width: 600px) {
+            .main-content { margin-top: 48px; }
+            .book-container { margin: 0; border-radius: 0; box-shadow: none; }
+            .book-content, .book-front-matter, .book-back-matter { padding: 18px 2vw; }
+            .book-cover { padding: 40px 8px 32px 8px; }
+            .top-bar { padding: 0 8px; }
+        }
+    </style>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f5f1eb;
+            --paper-color: #fffef9;
+            --text-color: #2c2c2c;
+            --heading-color: #1a1a1a;
+            --border-color: #d4c4a8;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --accent-color: #8b4513;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .book-title-bar {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .view-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .view-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-top: 50px;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Book Container */
+        .book-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--paper-color);
+            box-shadow: 0 0 30px var(--shadow-color), 
+                        0 0 0 1px var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        /* Cover Page */
+        .book-cover {
+            padding: 80px 60px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f6f0 0%, #e8e4d8 100%);
+            border-bottom: 3px double var(--border-color);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .book-cover h1 {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .book-cover .subtitle {
+            font-size: 18px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+
+        .book-cover .author {
+            font-size: 20px;
+            color: var(--accent-color);
+            margin-top: 30px;
+        }
+
+        .book-cover .publisher {
+            font-size: 14px;
+            color: #888;
+            margin-top: 60px;
+        }
+
+        /* Book Content */
+        .book-content {
+            padding: 60px;
+        }
+
+        .book-content.rtl {
+            direction: rtl;
+            font-family: 'Noto Nastaliq Urdu', 'Amiri', serif;
+            line-height: 2.2;
+        }
+
+        /* Chapter Styling */
+        .chapter {
+            margin-bottom: 60px;
+            page-break-before: always;
+        }
+
+        .chapter:first-child {
+            page-break-before: auto;
+        }
+
+        .chapter-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            text-align: center;
+        }
+
+        /* Paragraph Styling */
+        .book-content p,
+        .book-content div {
+            margin-bottom: 1.5em;
+            text-align: justify;
+            text-indent: 2em;
+        }
+
+        .book-content p:first-child,
+        .book-content div:first-child {
+            text-indent: 0;
+        }
+
+        /* Heading Styles */
+        .book-content h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--heading-color);
+            margin: 40px 0 25px 0;
+            text-align: center;
+        }
+
+        .book-content h2 {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin: 35px 0 20px 0;
+        }
+
+        .book-content h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin: 30px 0 15px 0;
+        }
+
+        /* Footnotes */
+        .footnote-ref {
+            color: var(--accent-color);
+            font-size: 0.8em;
+            vertical-align: super;
+            cursor: pointer;
+        }
+
+        .footnotes-section {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footnotes-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .footnote-item {
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-left: 30px;
+            text-indent: -30px;
+        }
+
+        /* Front Matter Section */
+        .book-front-matter {
+            padding: 40px 60px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .book-front-matter .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin: 30px 0 20px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .book-front-matter .section-content {
+            margin-bottom: 40px;
+        }
+
+        /* Back Matter Section */
+        .book-back-matter {
+            padding: 40px 60px;
+            border-top: 2px solid var(--border-color);
+            background: linear-gradient(180deg, var(--paper-color) 0%, rgba(0,0,0,0.02) 100%);
+        }
+
+        .book-back-matter .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin: 30px 0 20px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .book-back-matter .section-content {
+            margin-bottom: 40px;
+        }
+
+        /* References Section */
+        .references-section {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .references-section h3 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .reference-item {
+            margin-bottom: 15px;
+            padding-left: 40px;
+            text-indent: -40px;
+            font-size: 15px;
+        }
+
+        /* Page Numbers */
+        .page-number {
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            padding: 30px 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        /* RTL Support */
+        .rtl .chapter-title,
+        .rtl h1, .rtl h2, .rtl h3 {
+            font-family: 'Noto Nastaliq Urdu', 'Amiri', serif;
+        }
+
+        .rtl p, .rtl div {
+            text-align: right;
+            text-indent: 0;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            --bg-color: #1a1a1a;
+            --paper-color: #252525;
+            --text-color: #d4d4d4;
+            --heading-color: #f0f0f0;
+            --border-color: #444;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* No Book Message */
+        .no-book-message {
+            text-align: center;
+            padding: 100px 40px;
+            color: #666;
+        }
+
+        .no-book-message h2 {
+            margin-bottom: 20px;
+            color: var(--heading-color);
+        }
+
+        .no-book-message a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .no-book-message a:hover {
+            text-decoration: underline;
+        }
+
+        /* Print Styles */
+        @media print {
+            .top-bar {
+                display: none;
+            }
+
+            .main-content {
+                margin-top: 0;
+                padding: 0;
+            }
+
+            .book-container {
+                box-shadow: none;
+                max-width: none;
+            }
+
+            .book-cover {
+                page-break-after: always;
+            }
+
+            .chapter {
+                page-break-before: always;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .book-cover {
+                padding: 50px 30px;
+            }
+
+            .book-cover h1 {
+                font-size: 28px;
+            }
+
+            .book-content {
+                padding: 30px;
+            }
+
+            .chapter-title {
+                font-size: 22px;
+            }
+        }
+
+        /* IPA Context Menu */
+        .ipa-context-menu {
+            position: fixed;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 6px 0;
+            z-index: 10000;
+            min-width: 180px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: none;
+        }
+
+        .ipa-context-menu.show {
+            display: block;
+        }
+
+        .ipa-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+        }
+
+        .ipa-menu-item:hover {
+            background: #f0f0f0;
+        }
+
+        .ipa-menu-item .ipa-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .ipa-menu-item .ipa-label {
+            flex: 1;
+        }
+
+        .ipa-menu-item .ipa-shortcut {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .ipa-menu-divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 4px 0;
+        }
+
+        .ipa-menu-header {
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* IPA inserted text styling */
+        .ipa-text {
+            font-family: 'Noto Sans', 'Doulos SIL', 'Charis SIL', 'Gentium Plus', sans-serif;
+            color: var(--accent-color);
+            font-size: 0.9em;
+            background: rgba(139, 69, 19, 0.08);
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 3px;
+        }
+
+        body.dark-mode .ipa-context-menu {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+
+        body.dark-mode .ipa-menu-item {
+            color: #ddd;
+        }
+
+        body.dark-mode .ipa-menu-item:hover {
+            background: #3a3a3a;
+        }
+
+        body.dark-mode .ipa-text {
+            background: rgba(139, 69, 19, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <button class="back-btn" onclick="goToEditor()">← Editor</button>
+            <span class="book-title-bar" id="bookTitleBar">Book Viewer</span>
+        </div>
+        <div class="top-bar-right">
+            <button class="view-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 Dark</button>
+            <button class="view-btn" onclick="printBook()">🖨️ Print</button>
+            <button class="view-btn" onclick="exportBookToWord()">Export Word</button>
+            <button class="view-btn" onclick="exportBookToPdf()">Export PDF</button>
+            <button class="view-btn" onclick="exportBookToEpub()">Export EPUB</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="book-container" id="bookContainer">
+            <!-- Book content will be loaded here -->
+            <div class="no-book-message" id="noBookMessage">
+                <h2>No Book Found</h2>
+                <p>Create or open a book in the <a href="editor.html">Editor</a> first.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Constants
+        const AUTOSAVE_KEY = 'girmin_book_autosave';
+        const METADATA_KEY = 'girmin_book_metadata';
+        const SETUP_KEY = 'girmin_software_setup';
+
+        // ========================================
+        // IPA MAPPING (Orthography → IPA)
+        // ========================================
+        // Burushaski Latin orthography to IPA mapping
+        // Customize this mapping based on your orthography system
+        const IPA_MAPPINGS = {
+            // Vowels
+            'a': 'a', 'aa': 'aː', 'á': 'á', 'à': 'à',
+            'e': 'e', 'ee': 'eː', 'é': 'é', 'è': 'è',
+            'i': 'i', 'ii': 'iː', 'í': 'í', 'ì': 'ì',
+            'o': 'o', 'oo': 'oː', 'ó': 'ó', 'ò': 'ò',
+            'u': 'u', 'uu': 'uː', 'ú': 'ú', 'ù': 'ù',
+            
+            // Consonants - Basic
+            'b': 'b', 'p': 'p', 'd': 'd', 't': 't',
+            'g': 'ɡ', 'k': 'k', 'm': 'm', 'n': 'n',
+            'l': 'l', 'r': 'r', 's': 's', 'z': 'z',
+            'f': 'f', 'v': 'v', 'w': 'w', 'y': 'j',
+            'h': 'h', 'j': 'dʒ',
+            
+            // Aspirated consonants
+            'ph': 'pʰ', 'th': 'tʰ', 'kh': 'kʰ', 'ch': 'tʃʰ',
+            'bh': 'bʱ', 'dh': 'dʱ', 'gh': 'ɡʱ', 'jh': 'dʒʱ',
+            
+            // Retroflex consonants
+            'ṭ': 'ʈ', 'ḍ': 'ɖ', 'ṇ': 'ɳ', 'ṣ': 'ʂ', 'ẓ': 'ʐ',
+            'ṭh': 'ʈʰ', 'ḍh': 'ɖʱ',
+            
+            // Affricates
+            'c': 'ts', 'ć': 'tʃ', 'č': 'tʃ',
+            'ċ': 'ts', 'ç': 'tɕ',
+            
+            // Fricatives
+            'ś': 'ʃ', 'š': 'ʃ', 'x': 'x', 'ġ': 'ɣ', 'ɣ': 'ɣ',
+            'ḥ': 'ħ', 'ʰ': 'ʰ',
+            
+            // Nasals
+            'ṅ': 'ŋ', 'ñ': 'ɲ', 'ŋ': 'ŋ',
+            
+            // Special characters
+            'q': 'q', 'ʼ': 'ʔ', "'": 'ʔ',
+            
+            // Digraphs - more complex mappings
+            'ng': 'ŋ', 'ny': 'ɲ', 'sh': 'ʃ', 'zh': 'ʒ',
+            'ts': 'ts', 'dz': 'dz', 'tc': 'tɕ', 'dc': 'dʑ'
+        };
+
+        // Sort mappings by length (longest first) for proper replacement
+        const sortedMappingKeys = Object.keys(IPA_MAPPINGS).sort((a, b) => b.length - a.length);
+
+        /**
+         * Convert a word to IPA based on orthography mapping
+         * @param {string} word - The word to convert
+         * @returns {string} IPA transcription
+         */
+        function convertToIPA(word) {
+            if (!word) return '';
+            
+            let result = '';
+            let i = 0;
+            const lowerWord = word.toLowerCase();
+            
+            while (i < lowerWord.length) {
+                let matched = false;
+                
+                // Try to match longest sequences first
+                for (const key of sortedMappingKeys) {
+                    if (lowerWord.substring(i, i + key.length) === key) {
+                        result += IPA_MAPPINGS[key];
+                        i += key.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                // If no mapping found, keep original character
+                if (!matched) {
+                    result += lowerWord[i];
+                    i++;
+                }
+            }
+            
+            return result;
+        }
+
+        /**
+         * Load and display the book
+         */
+        function loadBook() {
+            const bookContainer = document.getElementById('bookContainer');
+            const noBookMessage = document.getElementById('noBookMessage');
+            const bookTitleBar = document.getElementById('bookTitleBar');
+
+            // Load metadata
+            let metadata = {};
+            try {
+                const metaStr = localStorage.getItem(METADATA_KEY);
+                if (metaStr) {
+                    metadata = JSON.parse(metaStr);
+                }
+            } catch (e) {
+                console.error('Error loading metadata:', e);
+            }
+
+            // Load setup info
+            let setup = {};
+            try {
+                const setupStr = localStorage.getItem(SETUP_KEY);
+                if (setupStr) {
+                    setup = JSON.parse(setupStr);
+                }
+            } catch (e) {
+                console.error('Error loading setup:', e);
+            }
+
+            // Load book data (JSON with chapters structure)
+            let bookData = null;
+            let frontMatterContent = '';
+            let chaptersContent = '';
+            let backMatterContent = '';
+            
+            try {
+                const savedData = localStorage.getItem(AUTOSAVE_KEY);
+                if (savedData) {
+                    bookData = JSON.parse(savedData);
+                    
+                    // Extract front matter content
+                    if (bookData.frontMatter && Array.isArray(bookData.frontMatter)) {
+                        bookData.frontMatter.forEach(section => {
+                            if (section.title) {
+                                frontMatterContent += `<h2 class="section-title">${escapeHtml(section.title)}</h2>`;
+                            }
+                            if (section.content) {
+                                frontMatterContent += `<div class="section-content">${section.content}</div>`;
+                            }
+                        });
+                    }
+                    
+                    // Extract content from all chapters and paragraphs
+                    if (bookData.chapters && Array.isArray(bookData.chapters)) {
+                        bookData.chapters.forEach((chapter, chIdx) => {
+                            // Add chapter title
+                            if (chapter.title) {
+                                chaptersContent += `<h2 class="chapter-title">${escapeHtml(chapter.title)}</h2>`;
+                            }
+                            
+                            // Add paragraphs
+                            if (chapter.paragraphs && Array.isArray(chapter.paragraphs)) {
+                                chapter.paragraphs.forEach(para => {
+                                    if (para.content) {
+                                        chaptersContent += para.content;
+                                    }
+                                });
+                            } else if (chapter.content) {
+                                // Legacy: direct content on chapter
+                                chaptersContent += chapter.content;
+                            }
+                            
+                            // Add footnotes for this chapter
+                            if (chapter.footnotes && chapter.footnotes.length > 0) {
+                                chaptersContent += `<div class="chapter-footnotes">`;
+                                chapter.footnotes.forEach((fn, fnIdx) => {
+                                    chaptersContent += `<p class="footnote-item"><sup>${fnIdx + 1}</sup> ${escapeHtml(fn.text || fn)}</p>`;
+                                });
+                                chaptersContent += `</div>`;
+                            }
+                        });
+                    }
+                    
+                    // Extract back matter content
+                    if (bookData.backMatter && Array.isArray(bookData.backMatter)) {
+                        bookData.backMatter.forEach(section => {
+                            if (section.title) {
+                                backMatterContent += `<h2 class="section-title">${escapeHtml(section.title)}</h2>`;
+                            }
+                            if (section.content) {
+                                backMatterContent += `<div class="section-content">${section.content}</div>`;
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing book data:', e);
+                // Try as raw HTML (legacy format)
+                chaptersContent = localStorage.getItem(AUTOSAVE_KEY) || '';
+            }
+            
+            // Combine all content for checking
+            const allContent = frontMatterContent + chaptersContent + backMatterContent;
+            if (!allContent || allContent.trim() === '' || allContent === '<p><br></p>') {
+                noBookMessage.style.display = 'block';
+                // Show test content for IPA feature testing
+                const testContent = document.getElementById('testContent');
+                if (testContent) testContent.style.display = 'block';
+                return;
+            }
+
+            noBookMessage.style.display = 'none';
+
+            // Get book title from bookData or metadata
+            const bookTitle = (bookData && bookData.title) || metadata.title || setup.bookTitle || 'Untitled Book';
+            const subtitle = metadata.subtitle || '';
+            const author = (bookData && bookData.author) || metadata.author || setup.authorName || '';
+            const publisher = setup.companyName || '';
+
+            bookTitleBar.textContent = bookTitle;
+            document.title = bookTitle + ' - Book Viewer';
+
+            // Determine text direction
+            const isRTL = detectRTL(allContent);
+
+            // Build the book HTML
+            let bookHTML = '';
+
+            // Cover Page
+            bookHTML += `
+                <div class="book-cover">
+                    <h1>${escapeHtml(bookTitle)}</h1>
+                    ${subtitle ? `<div class="subtitle">${escapeHtml(subtitle)}</div>` : ''}
+                    ${author ? `<div class="author">by ${escapeHtml(author)}</div>` : ''}
+                    ${publisher ? `<div class="publisher">${escapeHtml(publisher)}</div>` : ''}
+                </div>
+            `;
+
+            // Table of Contents (auto-generated from structure)
+            bookHTML += generateBookTOCFromStructure(bookData, isRTL);
+
+            // Front Matter (if any)
+            if (frontMatterContent) {
+                bookHTML += `
+                    <div class="book-front-matter${isRTL ? ' rtl' : ''}">
+                        ${frontMatterContent}
+                    </div>
+                `;
+            }
+
+            // Main Book Content (Chapters)
+            bookHTML += `
+                <div class="book-content${isRTL ? ' rtl' : ''}" id="bookContent">
+                    ${chaptersContent}
+                </div>
+            `;
+
+            // Back Matter (if any)
+            if (backMatterContent) {
+                bookHTML += `
+                    <div class="book-back-matter${isRTL ? ' rtl' : ''}">
+                        ${backMatterContent}
+                    </div>
+                `;
+            }
+
+            // Add references section if available
+            if (bookData && bookData.references && bookData.references.length > 0) {
+                bookHTML += `
+                    <div class="references-section">
+                        <h3>References</h3>
+                        ${bookData.references.map((ref, i) => 
+                            `<p class="reference-item">[${i + 1}] ${escapeHtml(ref.text || ref)}</p>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+
+            // Page number
+            bookHTML += `<div class="page-number">— ❧ —</div>`;
+
+            bookContainer.innerHTML = bookHTML;
+                // ===============================
+                // TABLE OF CONTENTS GENERATION (STRUCTURE-BASED)
+                // ===============================
+                function generateBookTOCFromStructure(bookData, isRTL) {
+                    if (!bookData) return '';
+                    let toc = `<nav class="toc-book${isRTL ? ' rtl' : ''}"><h3>Table of Contents</h3><ul>`;
+                    let anchorIdx = 0;
+                    // Front Matter
+                    if (bookData.frontMatter && Array.isArray(bookData.frontMatter)) {
+                        bookData.frontMatter.forEach((section, i) => {
+                            if (section.title) {
+                                toc += `<li class="toc-h1"><a href="#toc-fm-${anchorIdx}">${section.title}</a></li>`;
+                                // Add anchor to section in DOM after render
+                                setTimeout(() => {
+                                    const el = document.querySelector('.book-front-matter .section-title:nth-of-type(' + (i+1) + ')');
+                                    if (el) el.id = 'toc-fm-' + anchorIdx;
+                                }, 200);
+                                anchorIdx++;
+                            }
+                        });
+                    }
+                    // Chapters
+                    if (bookData.chapters && Array.isArray(bookData.chapters)) {
+                        bookData.chapters.forEach((chapter, i) => {
+                            if (chapter.title) {
+                                toc += `<li class="toc-h1"><a href="#toc-ch-${anchorIdx}">${chapter.title}</a></li>`;
+                                setTimeout(() => {
+                                    const el = document.querySelector('.book-content .chapter-title:nth-of-type(' + (i+1) + ')');
+                                    if (el) el.id = 'toc-ch-' + anchorIdx;
+                                }, 200);
+                                anchorIdx++;
+                            }
+                        });
+                    }
+                    // Back Matter
+                    if (bookData.backMatter && Array.isArray(bookData.backMatter)) {
+                        bookData.backMatter.forEach((section, i) => {
+                            if (section.title) {
+                                toc += `<li class="toc-h1"><a href="#toc-bm-${anchorIdx}">${section.title}</a></li>`;
+                                setTimeout(() => {
+                                    const el = document.querySelector('.book-back-matter .section-title:nth-of-type(' + (i+1) + ')');
+                                    if (el) el.id = 'toc-bm-' + anchorIdx;
+                                }, 200);
+                                anchorIdx++;
+                            }
+                        });
+                    }
+                    toc += '</ul></nav>';
+                    return toc;
+                }
+        }
+
+        /**
+         * Detect if content is primarily RTL
+         */
+        function detectRTL(html) {
+            // Check for dir="rtl" attribute
+            if (html.includes('dir="rtl"')) return true;
+            
+            // Check for Arabic/Urdu script characters
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const text = tempDiv.textContent || '';
+            
+            // Count RTL characters (Arabic, Persian, Urdu range)
+            const rtlChars = (text.match(/[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/g) || []).length;
+            const ltrChars = (text.match(/[a-zA-Z]/g) || []).length;
+            
+            return rtlChars > ltrChars;
+        }
+
+        /**
+         * Process and clean up content
+         */
+        function processContent(html) {
+            // Create a temporary container
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Process chapters - look for h1, h2 with chapter-like content
+            const headings = tempDiv.querySelectorAll('h1, h2');
+            headings.forEach(heading => {
+                const text = heading.textContent.toLowerCase();
+                if (text.includes('chapter') || text.includes('باب')) {
+                    heading.classList.add('chapter-title');
+                }
+            });
+
+            return tempDiv.innerHTML;
+        }
+
+        /**
+         * Escape HTML entities
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /**
+         * Navigate to editor
+         */
+        function goToEditor() {
+            window.location.href = 'editor.html';
+        }
+
+        /**
+         * Toggle dark mode
+         */
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('darkModeBtn');
+            if (document.body.classList.contains('dark-mode')) {
+                btn.innerHTML = '☀️ Light';
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = '🌙 Dark';
+                btn.classList.remove('active');
+            }
+        }
+
+        /**
+         * Print the book
+         */
+        function printBook() {
+            window.print();
+        }
+
+        // ========================================
+        // IPA RIGHT-CLICK CONTEXT MENU
+        // ========================================
+
+        let selectedWord = '';
+        let selectedWordElement = null;
+        let selectedWordRange = null;
+
+        /**
+         * Get the word at the click position
+         * @param {MouseEvent} event 
+         * @returns {object} - { word, range, element }
+         */
+        function getWordAtClick(event) {
+            const selection = window.getSelection();
+            
+            // Get the element that was clicked
+            let target = event.target;
+            
+            // Check if we're in an RTL context - if so, skip
+            if (target.closest('.rtl') || 
+                target.closest('[dir="rtl"]') ||
+                getComputedStyle(target).direction === 'rtl') {
+                return null;
+            }
+            
+            // Only work within book content (LTR)
+            const bookContent = target.closest('.book-content');
+            if (!bookContent || bookContent.classList.contains('rtl')) {
+                return null;
+            }
+            
+            // Use caretRangeFromPoint to get precise position
+            let range;
+            if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(event.clientX, event.clientY);
+            } else if (document.caretPositionFromPoint) {
+                const pos = document.caretPositionFromPoint(event.clientX, event.clientY);
+                range = document.createRange();
+                range.setStart(pos.offsetNode, pos.offset);
+                range.setEnd(pos.offsetNode, pos.offset);
+            }
+            
+            if (!range || !range.startContainer) return null;
+            
+            const node = range.startContainer;
+            if (node.nodeType !== Node.TEXT_NODE) return null;
+            
+            const text = node.textContent;
+            const offset = range.startOffset;
+            
+            // Find word boundaries
+            let start = offset;
+            let end = offset;
+            
+            // Word characters including Burushaski special characters
+            const wordRegex = /[\wáéíóúàèìòùāēīōūṭḍṇṣẓćčśšġñŋʰʼ'-]/i;
+            
+            // Move start backwards to find word beginning
+            while (start > 0 && wordRegex.test(text[start - 1])) {
+                start--;
+            }
+            
+            // Move end forward to find word ending
+            while (end < text.length && wordRegex.test(text[end])) {
+                end++;
+            }
+            
+            if (start === end) return null;
+            
+            const word = text.substring(start, end);
+            
+            // Create a range for the word
+            const wordRange = document.createRange();
+            wordRange.setStart(node, start);
+            wordRange.setEnd(node, end);
+            
+            return {
+                word: word,
+                range: wordRange,
+                element: target
+            };
+        }
+
+        /**
+         * Show the IPA context menu
+         */
+        function showIPAMenu(x, y) {
+            const menu = document.getElementById('ipaContextMenu');
+            
+            // Position the menu
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            
+            // Adjust if menu goes off screen
+            const menuRect = menu.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            if (x + 200 > viewportWidth) {
+                menu.style.left = (x - 200) + 'px';
+            }
+            if (y + 150 > viewportHeight) {
+                menu.style.top = (y - 150) + 'px';
+            }
+            
+            menu.classList.add('show');
+        }
+
+        /**
+         * Hide the IPA context menu
+         */
+        function hideIPAMenu() {
+            const menu = document.getElementById('ipaContextMenu');
+            menu.classList.remove('show');
+        }
+
+        /**
+         * Insert IPA next to the selected word
+         */
+        function insertIPAForWord() {
+            if (!selectedWord || !selectedWordRange) {
+                hideIPAMenu();
+                return;
+            }
+            
+            const ipa = convertToIPA(selectedWord);
+            
+            // Create IPA span
+            const ipaSpan = document.createElement('span');
+            ipaSpan.className = 'ipa-text';
+            ipaSpan.textContent = '[' + ipa + ']';
+            ipaSpan.title = 'IPA: ' + ipa;
+            
+            // Insert after the word
+            const range = selectedWordRange;
+            range.collapse(false); // Collapse to end
+            range.insertNode(ipaSpan);
+            
+            // Clear selection
+            window.getSelection().removeAllRanges();
+            hideIPAMenu();
+            
+            // Show notification
+            showNotification(`IPA inserted: [${ipa}]`);
+        }
+
+        /**
+         * Replace word with IPA
+         */
+        function insertIPAReplace() {
+            if (!selectedWord || !selectedWordRange) {
+                hideIPAMenu();
+                return;
+            }
+            
+            const ipa = convertToIPA(selectedWord);
+            
+            // Create IPA span with original word as tooltip
+            const ipaSpan = document.createElement('span');
+            ipaSpan.className = 'ipa-text';
+            ipaSpan.textContent = ipa;
+            ipaSpan.title = 'Original: ' + selectedWord;
+            
+            // Replace the word
+            selectedWordRange.deleteContents();
+            selectedWordRange.insertNode(ipaSpan);
+            
+            // Clear selection
+            window.getSelection().removeAllRanges();
+            hideIPAMenu();
+            
+            showNotification(`Replaced with IPA: ${ipa}`);
+        }
+
+        /**
+         * Copy IPA to clipboard
+         */
+        function copyIPAToClipboard() {
+            if (!selectedWord) {
+                hideIPAMenu();
+                return;
+            }
+            
+            const ipa = convertToIPA(selectedWord);
+            
+            navigator.clipboard.writeText(ipa).then(() => {
+                showNotification(`Copied IPA: ${ipa}`);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showNotification('Failed to copy IPA');
+            });
+            
+            hideIPAMenu();
+        }
+
+        /**
+         * Show a brief notification
+         */
+        function showNotification(message) {
+            // Remove existing notification
+            const existing = document.querySelector('.ipa-notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = 'ipa-notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #333;
+                color: #fff;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 10001;
+                animation: fadeInOut 2s ease-in-out forwards;
+            `;
+            
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+                    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    85% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // Remove after animation
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+
+        /**
+         * Handle right-click on book content
+         */
+        function handleContextMenu(event) {
+            // Get word at click position
+            const wordInfo = getWordAtClick(event);
+            
+            if (wordInfo && wordInfo.word) {
+                event.preventDefault();
+                
+                selectedWord = wordInfo.word;
+                selectedWordRange = wordInfo.range;
+                selectedWordElement = wordInfo.element;
+                
+                // Highlight the word
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(wordInfo.range.cloneRange());
+                
+                // Show custom menu
+                showIPAMenu(event.clientX, event.clientY);
+            } else {
+                // Let default context menu show for RTL or non-text
+                hideIPAMenu();
+            }
+        }
+
+        /**
+         * Hide menu when clicking elsewhere
+         */
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('ipaContextMenu');
+            if (!menu.contains(event.target)) {
+                hideIPAMenu();
+            }
+        });
+
+        /**
+         * Hide menu on scroll
+         */
+        document.addEventListener('scroll', hideIPAMenu);
+
+        /**
+         * Attach context menu to book content after load
+         */
+        function attachContextMenuHandler() {
+            const bookContainer = document.getElementById('bookContainer');
+            if (bookContainer) {
+                bookContainer.addEventListener('contextmenu', handleContextMenu);
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBook();
+            attachContextMenuHandler();
+        });
+
+        // =============================
+        // EXPORT BUTTON HANDLERS
+        // =============================
+        function getBookExportData() {
+            // You may want to customize this to gather all book content and metadata
+            const bookTitle = document.getElementById('bookTitleBar')?.textContent || 'Untitled Book';
+            const bookContainer = document.getElementById('bookContainer');
+            let chapters = [];
+            // Example: Each .chapter or .section is a chapter
+            const chapterEls = bookContainer.querySelectorAll('.chapter, .section');
+            if (chapterEls.length > 0) {
+                chapterEls.forEach(el => {
+                    chapters.push({
+                        title: el.querySelector('.chapter-title, .section-title')?.textContent || '',
+                        content: el.innerHTML
+                    });
+                });
+            } else {
+                // Fallback: treat all content as one chapter
+                chapters.push({
+                    title: bookTitle,
+                    content: bookContainer.innerHTML
+                });
+            }
+            return { bookTitle, chapters };
+        }
+
+        function exportBookToWord() {
+            const { bookTitle, chapters } = getBookExportData();
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.export_word) {
+                window.pywebview.api.export_word(bookTitle, chapters)
+                    .then(res => {
+                        if (res && res.success) {
+                            alert('Word file exported successfully!');
+                        } else {
+                            alert('Word export failed: ' + (res && res.error ? res.error : 'Unknown error'));
+                        }
+                    });
+            } else {
+                alert('Word export not available in this environment.');
+            }
+        }
+
+        function exportBookToPdf() {
+            const { bookTitle, chapters } = getBookExportData();
+            const bookContainer = document.getElementById('bookContainer');
+            if (!bookContainer) return;
+            const opt = {
+                margin:       0.5,
+                filename:     `${bookTitle}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            // If running in PyWebview, send PDF data to Python
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.export_pdf) {
+                html2pdf().from(bookContainer).set(opt).outputPdf('blob').then(function(pdfBlob) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        // Send base64 PDF to Python
+                        window.pywebview.api.export_pdf(bookTitle, reader.result)
+                            .then(res => {
+                                if (res && res.success) {
+                                    alert('PDF exported successfully!');
+                                } else {
+                                    alert('PDF export failed: ' + (res && res.error ? res.error : 'Unknown error'));
+                                }
+                            });
+                    };
+                    reader.readAsDataURL(pdfBlob);
+                });
+            } else {
+                html2pdf().from(bookContainer).set(opt).save();
+            }
+        }
+
+        function exportBookToEpub() {
+            const { bookTitle, chapters } = getBookExportData();
+            if (window.pywebview && window.pywebview.api && window.pywebview.api.export_epub) {
+                window.pywebview.api.export_epub(bookTitle, chapters)
+                    .then(res => {
+                        if (res && res.success) {
+                            alert('EPUB file exported successfully!');
+                        } else {
+                            alert('EPUB export failed: ' + (res && res.error ? res.error : 'Unknown error'));
+                        }
+                    });
+            } else {
+                alert('EPUB export not available in this environment.');
+            }
+        }
+    </script>
+</body>
+</html>

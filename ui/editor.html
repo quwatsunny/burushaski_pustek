@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Girmin</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <!-- Google Fonts - Nastaliq for RTL, Serif for LTR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Amiri:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <button class="mobile-sidebar-toggle" id="mobileSidebarToggle" title="Toggle Sidebar" aria-label="Toggle Sidebar">☰</button>
+    <div class="main-container">
+        <!-- Book Editor Sidebar -->
+        <nav class="book-sidebar" role="navigation" aria-label="Book Navigation">
+            <div class="sidebar-header">
+                <img src="assets/girmin-icon.svg" alt="Girmin" class="sidebar-logo" title="Girmin" style="width: 28px; height: 28px; border-radius: 6px;">
+                <div class="mega-menu">
+                    <button class="mega-menu-trigger" type="button">File</button>
+                    <div class="mega-menu-dropdown">
+                        <button id="newBookBtn" class="mega-menu-item" type="button" onclick="handleNewClick()">New</button>
+                        <button id="loadBookBtn" class="mega-menu-item" type="button" onclick="handleLoadClick()">Open</button>
+                        <button id="saveBookBtn" class="mega-menu-item" type="button" onclick="saveBookToFile()">Save</button>
+                        <div class="mega-menu-divider"></div>
+                        <button id="importFileBtn" class="mega-menu-item" type="button" onclick="handleImportClick()">Import</button>
+                        <button id="exportWordBtn" class="mega-menu-item" type="button" onclick="exportToWord()">Export Word</button>
+                        <button id="exportPdfBtn" class="mega-menu-item" type="button" onclick="exportToPdf()">Export PDF</button>
+                        <button id="exportEpubBtn" class="mega-menu-item" type="button" onclick="exportToEpub()">Export EPUB</button>
+                        <div class="mega-menu-divider"></div>
+                        <a href="book-view.html" class="mega-menu-item">📖 View Book</a>
+                        <a href="setup.html" class="mega-menu-item">Settings</a>
+                    </div>
+                </div>
+                <a href="book-metadata.html" class="mega-menu-trigger" title="Book Info">Info</a>
+            </div>
+            <div class="sidebar-book-title" id="sidebarBookTitle">Untitled Book</div>
+            <div class="sidebar-quick-actions">
+                <button class="quick-add-btn" type="button" onclick="addChapter()" title="Add Chapter">+Ch</button>
+                <button class="quick-add-btn" type="button" onclick="addParagraphToCurrent()" title="Add Paragraph">+¶</button>
+                <button class="quick-add-btn" type="button" onclick="addReference()" title="Add Reference">+Ref</button>
+                <button class="quick-add-btn" type="button" onclick="insertFootnote()" title="Add Footnote">+¹</button>
+            </div>
+            <input type="file" id="loadBookInput" accept="application/json" style="display:none;" />
+            
+            <!-- Front Matter Section -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title" id="frontMatterToggle">Front Matter <span class="toggle-icon">▶</span></h4>
+                <div id="frontMatterPanel" class="front-matter-panel" style="display:none;">
+                    <div id="frontMatterList" class="chapter-list"></div>
+                    <div class="mega-menu section-menu">
+                        <button class="add-item-btn mega-menu-trigger" type="button">+ Add</button>
+                        <div class="mega-menu-dropdown">
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Foreword')">Foreword</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Preface')">Preface</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Acknowledgements')">Acknowledgements</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Dedication')">Dedication</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Introduction')">Introduction</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('front', 'Prologue')">Prologue</button>
+                            <div class="mega-menu-divider"></div>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionCustom('front')">Custom...</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chapters Section -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title" id="chaptersToggle">Chapters <span class="toggle-icon">▼</span></h4>
+                <div id="chaptersPanel">
+                    <div id="chapterList" class="chapter-list"></div>
+                    <div id="noChaptersMsg" class="no-items-msg" style="display:none;">No chapters yet.</div>
+                </div>
+            </div>
+            
+            <!-- Back Matter Section -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title collapsed" id="backMatterToggle">Back Matter <span class="toggle-icon">▶</span></h4>
+                <div id="backMatterPanel" class="back-matter-panel" style="display:none;">
+                    <div id="backMatterList" class="chapter-list"></div>
+                    <div class="mega-menu section-menu">
+                        <button class="add-item-btn mega-menu-trigger" type="button">+ Add</button>
+                        <div class="mega-menu-dropdown">
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Glossary')">Glossary</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Appendix')">Appendix</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Bibliography')">Bibliography</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Index')">Index</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'About the Author')">About the Author</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Epilogue')">Epilogue</button>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionDirect('back', 'Afterword')">Afterword</button>
+                            <div class="mega-menu-divider"></div>
+                            <button type="button" class="mega-menu-item" onclick="addBookSectionCustom('back')">Custom...</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title collapsed" id="refsToggle">References <span class="toggle-icon">▶</span></h4>
+                <div id="refsPanel" class="refs-panel" style="display:none;">
+                    <ul id="refsList" class="refs-list"></ul>
+                    <button id="addRefBtn" class="add-item-btn" type="button" onclick="addReference()">+ Ref</button>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h4 class="sidebar-section-title collapsed" id="footnotesToggle">Footnotes <span class="toggle-icon">▶</span></h4>
+                <div id="footnotesPanel" class="footnotes-panel" style="display:none;">
+                    <ul id="footnotesList" class="footnotes-list"></ul>
+                </div>
+            </div>
+            
+            <!-- Company Branding -->
+            <div class="sidebar-branding" id="sidebarBranding">
+                <div class="branding-logo" id="brandingLogo"></div>
+                <div class="branding-name" id="brandingName"></div>
+                <a href="setup.html" class="sidebar-settings-btn" title="Software Setup">⚙</a>
+            </div>
+        </nav>
+        
+        <!-- Editor Area -->
+        <div class="editor-wrapper">
+            <!-- Table of Contents Sidebar -->
+            <aside id="tocSidebar" class="toc-sidebar" style="display:none;">
+                <h3>Table of Contents</h3>
+                <ul id="tocList"></ul>
+            </aside>
+            <!-- Rich Text Formatting Toolbar -->
+            <div class="editor-toolbar toolbar-autohide" role="toolbar" aria-label="Text formatting">
+                <select id="fontSelect" class="toolbar-select toolbar-font-select" title="Font">
+                    <option value="">Font</option>
+                    <optgroup label="─ Latin Fonts ─">
+                        <option value="Noto Serif" style="font-family: 'Noto Serif'">Noto Serif</option>
+                        <option value="Georgia" style="font-family: Georgia">Georgia</option>
+                        <option value="Times New Roman" style="font-family: 'Times New Roman'">Times New Roman</option>
+                        <option value="Arial" style="font-family: Arial">Arial</option>
+                        <option value="Verdana" style="font-family: Verdana">Verdana</option>
+                        <option value="Courier New" style="font-family: 'Courier New'">Courier New</option>
+                    </optgroup>
+                    <optgroup label="─ RTL / Nastaliq ─">
+                        <option value="Noto Nastaliq Urdu" style="font-family: 'Noto Nastaliq Urdu'">Noto Nastaliq Urdu</option>
+                        <option value="Amiri" style="font-family: 'Amiri'">Amiri (Arabic)</option>
+                        <option value="Jameel Noori Nastaleeq" style="font-family: 'Jameel Noori Nastaleeq'">Jameel Noori Nastaleeq *</option>
+                        <option value="Mehr Nastaliq" style="font-family: 'Mehr Nastaliq'">Mehr Nastaliq *</option>
+                    </optgroup>
+                </select>
+                <select id="fontSizeSelect" class="toolbar-select" title="Font Size">
+                    <option value="">Size</option>
+                    <option value="1">8</option>
+                    <option value="2">10</option>
+                    <option value="3">12</option>
+                    <option value="4">14</option>
+                    <option value="5">18</option>
+                    <option value="6">24</option>
+                    <option value="7">36</option>
+                </select>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" data-cmd="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
+                <button type="button" class="toolbar-btn" data-cmd="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+                <button type="button" class="toolbar-btn" data-cmd="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+                <button type="button" class="toolbar-btn" data-cmd="strikeThrough" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
+                <span class="toolbar-divider"></span>
+                <select id="headingSelect" class="toolbar-select" title="Heading">
+                    <option value="">¶</option>
+                    <option value="H1">H1</option>
+                    <option value="H2">H2</option>
+                    <option value="H3">H3</option>
+                </select>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList" title="Bullet List">•</button>
+                <button type="button" class="toolbar-btn" data-cmd="insertOrderedList" title="Numbered List">1.</button>
+                <button type="button" class="toolbar-btn" data-cmd="justifyLeft" title="Align Left">⫷</button>
+                <button type="button" class="toolbar-btn" data-cmd="justifyCenter" title="Align Center">≡</button>
+                <button type="button" class="toolbar-btn" data-cmd="justifyRight" title="Align Right">⫸</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" data-cmd="outdent" title="Decrease Indent">⇤</button>
+                <button type="button" class="toolbar-btn" data-cmd="indent" title="Increase Indent">⇥</button>
+                <span class="toolbar-divider"></span>
+                <input type="color" class="toolbar-color" id="toolbarColor" value="#000000" title="Text Color">
+                <input type="color" class="toolbar-color" id="toolbarHighlight" value="#ffff00" title="Highlight Color">
+                <button type="button" class="toolbar-btn" data-cmd="removeFormat" title="Clear Formatting">✕</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" id="dirLtrBtn" title="Left to Right" onclick="setTextDirection('ltr')">LTR</button>
+                <button type="button" class="toolbar-btn" id="dirRtlBtn" title="Right to Left" onclick="setTextDirection('rtl')">RTL</button>
+                <span class="toolbar-divider"></span>
+                <button type="button" class="toolbar-btn" id="insertFootnoteBtn" title="Insert Footnote" onclick="insertFootnote()">¹</button>
+                <button type="button" class="toolbar-btn" id="insertCitationBtn" title="Insert Citation" onclick="insertCitationPrompt()">„</button>
+                <button type="button" class="toolbar-btn" id="ipaConvertToolbarBtn" title="Convert Selection to IPA">IPA</button>
+            </div>
+            
+            <div id="richEditor" class="editor-richtext focus-mode" contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true" aria-label="Book content editor" placeholder="Start typing here..."></div>
+            <!-- Ghost text for inline autocomplete suggestion -->
+            <div id="ghostText" class="ghost-text"></div>
+            <!-- Suggestions list for autocomplete -->
+            <ul id="suggestionsList" class="suggestions-list" style="display:none;"></ul>
+            
+            <!-- Suggestion Guide -->
+            <div class="suggest-guide">
+                <span class="guide-icon" title="Press Enter to accept suggestion">&#9166;</span>
+                <span class="guide-text">Press <b>Enter</b> to accept the grey suggestion</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fixed Bottom Bar -->
+    <div class="bottom-bar">
+        <div class="bottom-bar-left">
+            <select id="dialectSelect" class="dialect-select" title="Dictionary" aria-label="Select dictionary language">
+                <option value="">Select Language</option>
+                <option value="yasin">Yasin</option>
+                <option value="hunza">Hunza</option>
+            </select>
+            <span id="wordCount" class="word-count-label"></span>
+        </div>
+        <div class="bottom-bar-center">
+            <span class="copyright-text">© 2026 Quwat K. Sunny. Girmin - All Rights Reserved.</span>
+        </div>
+        <div class="bottom-bar-right">
+            <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dim Mode" onclick="toggleTheme()">🌙</button>
+            <span class="status-text">Girmin</span>
+        </div>
+    </div>
+
+    <script src="assets/js/editor.js"></script>
+    <script>
+    // Focus fade effect for the whole interface
+    const body = document.body;
+    var editor = document.getElementById('richEditor');
+    function updateFocusFade() {
+        if (document.activeElement === editor) {
+            body.classList.add('focus-fade-active');
+            body.classList.remove('focus-fade');
+        } else {
+            body.classList.add('focus-fade');
+            body.classList.remove('focus-fade-active');
+        }
+    }
+    editor.addEventListener('focus', updateFocusFade);
+    editor.addEventListener('blur', updateFocusFade);
+    window.addEventListener('DOMContentLoaded', updateFocusFade);
+    </script>
+</body>
+</html>
+

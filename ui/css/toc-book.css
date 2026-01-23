@@ -1,0 +1,37 @@
+/* Table of Contents for Book Viewer */
+.toc-book {
+    background: #f8f6f0;
+    border: 1px solid #e0d8c8;
+    border-radius: 6px;
+    padding: 24px 28px 18px 28px;
+    margin: 40px auto 32px auto;
+    max-width: 600px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.toc-book h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #8b4513;
+    margin-bottom: 18px;
+    text-align: center;
+}
+.toc-book ul {
+    list-style: none;
+    padding-left: 0;
+}
+.toc-book li {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+.toc-book .toc-h1 { font-weight: bold; }
+.toc-book .toc-h2 { margin-left: 18px; font-weight: 600; }
+.toc-book .toc-h3 { margin-left: 36px; font-weight: 400; }
+.toc-book a {
+    color: #8b4513;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.toc-book a:hover {
+    color: #a0522d;
+    text-decoration: underline;
+}

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Girmin</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .setup-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #fff;
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .setup-header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 0 0 8px 0;
+        }
+        
+        .setup-header p {
+            color: #86868b;
+            font-size: 15px;
+            margin: 0;
+        }
+        
+        .setup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        
+        .form-group .label-hint {
+            font-weight: 400;
+            color: #86868b;
+            font-size: 12px;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px 14px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0071e3;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .logo-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-preview {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #d2d2d7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .logo-preview-placeholder {
+            color: #86868b;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .logo-upload-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .logo-upload-controls input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        
+        .btn-primary {
+            background: #0071e3;
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #0077ed;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            border: 1px solid #d2d2d7;
+        }
+        
+        .btn-secondary:hover {
+            background: #e8e8ed;
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+            border: none;
+        }
+        
+        .btn-danger:hover {
+            background: #e0342b;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin: 12px 0 4px 0;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .section-title:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        
+        .tag-preview {
+            background: #f5f5f7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+        
+        .tag-preview h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #86868b;
+        }
+        
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .tag-item {
+            background: #fff;
+            border: 1px solid #d2d2d7;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #0071e3;
+        }
+        
+        .setup-complete {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .setup-complete.show {
+            display: block;
+        }
+        
+        .setup-complete .check-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .setup-complete h2 {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+        }
+        
+        .setup-complete p {
+            color: #86868b;
+            margin: 0 0 24px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .setup-container {
+                margin: 20px;
+                padding: 24px;
+            }
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            .logo-upload-area {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body style="overflow-y: auto; height: auto;">
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>⚙️ Software Setup</h1>
+            <p>Configure your organization's branding and information</p>
+        </div>
+        
+        <form class="setup-form" id="setupForm">
+            <h3 class="section-title">Organization Information</h3>
+            
+            <div class="form-group">
+                <label for="companyName">Company / Organization Name *</label>
+                <input type="text" id="companyName" name="companyName" placeholder="Enter company name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="companyTagline">Tagline / Slogan</label>
+                <input type="text" id="companyTagline" name="companyTagline" placeholder="e.g., Preserving Language, Building Future">
+            </div>
+            
+            <div class="form-group">
+                <label>Logo</label>
+                <div class="logo-upload-area">
+                    <div class="logo-preview" id="logoPreview">
+                        <span class="logo-preview-placeholder">No logo</span>
+                    </div>
+                    <div class="logo-upload-controls">
+                        <input type="file" id="logoInput" accept="image/*">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('logoInput').click()">Upload Logo</button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="removeLogo()">Remove</button>
+                        <span class="label-hint">Recommended: 200x200px, PNG or SVG</span>
+                    </div>
+                </div>
+            </div>
+            
+            <h3 class="section-title">Copyright & Legal</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="copyrightYear">Copyright Year *</label>
+                    <input type="number" id="copyrightYear" name="copyrightYear" placeholder="2024" min="1900" max="2100" required>
+                </div>
+                <div class="form-group">
+                    <label for="copyrightHolder">Copyright Holder</label>
+                    <input type="text" id="copyrightHolder" name="copyrightHolder" placeholder="e.g., Company Name or Author">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="copyrightText">Full Copyright Text <span class="label-hint">(Used in footer, about page)</span></label>
+                <input type="text" id="copyrightText" name="copyrightText" placeholder="e.g., © 2024 Company Name. All rights reserved.">
+            </div>
+            
+            <div class="form-group">
+                <label for="licenseType">License Type</label>
+                <select id="licenseType" name="licenseType">
+                    <option value="">Select license...</option>
+                    <option value="all-rights-reserved">All Rights Reserved</option>
+                    <option value="cc-by">Creative Commons (CC BY)</option>
+                    <option value="cc-by-sa">Creative Commons (CC BY-SA)</option>
+                    <option value="cc-by-nc">Creative Commons (CC BY-NC)</option>
+                    <option value="mit">MIT License</option>
+                    <option value="gpl">GPL</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            
+            <h3 class="section-title">Contact Information</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="contactEmail">Email</label>
+                    <input type="email" id="contactEmail" name="contactEmail" placeholder="contact@company.com">
+                </div>
+                <div class="form-group">
+                    <label for="contactPhone">Phone</label>
+                    <input type="tel" id="contactPhone" name="contactPhone" placeholder="+92 xxx xxxxxxx">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="website">Website</label>
+                <input type="url" id="website" name="website" placeholder="https://www.company.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" placeholder="Street address, City, Country"></textarea>
+            </div>
+            
+            <h3 class="section-title">Social Media</h3>
+            
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label for="socialFacebook">Facebook</label>
+                    <input type="url" id="socialFacebook" name="socialFacebook" placeholder="Facebook URL">
+                </div>
+                <div class="form-group">
+                    <label for="socialTwitter">Twitter / X</label>
+                    <input type="url" id="socialTwitter" name="socialTwitter" placeholder="Twitter URL">
+                </div>
+                <div class="form-group">
+                    <label for="socialYoutube">YouTube</label>
+                    <input type="url" id="socialYoutube" name="socialYoutube" placeholder="YouTube URL">
+                </div>
+            </div>
+            
+            <h3 class="section-title">Available Tags</h3>
+            <div class="tag-preview">
+                <h4>Use these tags in your documents:</h4>
+                <div class="tag-list">
+                    <span class="tag-item">{{company}}</span>
+                    <span class="tag-item">{{tagline}}</span>
+                    <span class="tag-item">{{logo}}</span>
+                    <span class="tag-item">{{year}}</span>
+                    <span class="tag-item">{{copyright}}</span>
+                    <span class="tag-item">{{email}}</span>
+                    <span class="tag-item">{{phone}}</span>
+                    <span class="tag-item">{{website}}</span>
+                    <span class="tag-item">{{address}}</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Setup</button>
+                <a href="editor.html" class="btn btn-secondary">Cancel</a>
+                <button type="button" class="btn btn-danger" onclick="resetSetup()" style="margin-left: auto;">Reset All</button>
+            </div>
+        </form>
+        
+        <div class="setup-complete" id="setupComplete">
+            <div class="check-icon">✅</div>
+            <h2>Setup Complete!</h2>
+            <p>Your organization information has been saved.</p>
+            <a href="editor.html" class="btn btn-primary">Go to Editor</a>
+        </div>
+    </div>
+    
+    <script>
+        const SETUP_KEY = 'girmin_software_setup';
+        let logoDataUrl = '';
+        
+        // Load existing setup
+        function loadSetup() {
+            const setup = JSON.parse(localStorage.getItem(SETUP_KEY) || '{}');
+            
+            // Populate form fields
+            Object.keys(setup).forEach(key => {
+                const field = document.getElementById(key);
+                if (field && setup[key] && key !== 'logo') {
+                    field.value = setup[key];
+                }
+            });
+            
+            // Load logo
+            if (setup.logo) {
+                logoDataUrl = setup.logo;
+                showLogoPreview(setup.logo);
+            }
+            
+            // Default copyright year to current year if empty
+            const yearField = document.getElementById('copyrightYear');
+            if (!yearField.value) {
+                yearField.value = new Date().getFullYear();
+            }
+        }
+        
+        // Show logo preview
+        function showLogoPreview(dataUrl) {
+            const preview = document.getElementById('logoPreview');
+            preview.innerHTML = `<img src="${dataUrl}" alt="Logo">`;
+        }
+        
+        // Handle logo upload
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoDataUrl = e.target.result;
+                showLogoPreview(logoDataUrl);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Remove logo
+        function removeLogo() {
+            logoDataUrl = '';
+            const preview = document.getElementById('logoPreview');
+            preview.innerHTML = '<span class="logo-preview-placeholder">No logo</span>';
+            document.getElementById('logoInput').value = '';
+        }
+        
+        // Save setup
+        function saveSetup(e) {
+            e.preventDefault();
+            
+            const form = document.getElementById('setupForm');
+            const formData = new FormData(form);
+            const setup = {};
+            
+            formData.forEach((value, key) => {
+                if (value) setup[key] = value;
+            });
+            
+            // Add logo
+            if (logoDataUrl) {
+                setup.logo = logoDataUrl;
+            }
+            
+            // Generate full copyright if not provided
+            if (!setup.copyrightText && setup.copyrightYear) {
+                const holder = setup.copyrightHolder || setup.companyName || '';
+                setup.copyrightText = `© ${setup.copyrightYear} ${holder}. All rights reserved.`;
+            }
+            
+            localStorage.setItem(SETUP_KEY, JSON.stringify(setup));
+            
+            // Show success
+            document.getElementById('setupForm').style.display = 'none';
+            document.getElementById('setupComplete').classList.add('show');
+        }
+        
+        // Reset setup
+        function resetSetup() {
+            if (!confirm('Are you sure you want to reset all setup data? This cannot be undone.')) return;
+            
+            localStorage.removeItem(SETUP_KEY);
+            logoDataUrl = '';
+            document.getElementById('setupForm').reset();
+            removeLogo();
+            document.getElementById('copyrightYear').value = new Date().getFullYear();
+        }
+        
+        // Get setup value (for use in other pages)
+        function getSetupValue(key) {
+            const setup = JSON.parse(localStorage.getItem(SETUP_KEY) || '{}');
+            return setup[key] || '';
+        }
+        
+        // Replace tags in text (for use in other pages)
+        function replaceTags(text) {
+            const setup = JSON.parse(localStorage.getItem(SETUP_KEY) || '{}');
+            return text
+                .replace(/\{\{company\}\}/g, setup.companyName || '')
+                .replace(/\{\{tagline\}\}/g, setup.companyTagline || '')
+                .replace(/\{\{logo\}\}/g, setup.logo ? `<img src="${setup.logo}" alt="Logo">` : '')
+                .replace(/\{\{year\}\}/g, setup.copyrightYear || new Date().getFullYear())
+                .replace(/\{\{copyright\}\}/g, setup.copyrightText || '')
+                .replace(/\{\{email\}\}/g, setup.contactEmail || '')
+                .replace(/\{\{phone\}\}/g, setup.contactPhone || '')
+                .replace(/\{\{website\}\}/g, setup.website || '')
+                .replace(/\{\{address\}\}/g, setup.address || '');
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadSetup);
+        document.getElementById('setupForm').addEventListener('submit', saveSetup);
+    </script>
+</body>
+</html>

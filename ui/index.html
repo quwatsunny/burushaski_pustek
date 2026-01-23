@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burushaski Dictionary Builder</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="card">
+            <div class="card-header">
+                <h1>Burushaski</h1>
+                <p>Spelling Dictionary for Text Editor</p>
+            </div>
+            <div class="card-body">
+                <!-- Alert Container -->
+                <div class="alert-container" id="alertContainer"></div>
+
+                <!-- File Upload Section -->
+                <div class="form-group">
+                    <label class="form-label">Import Dictionary</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".csv,.lift,.xml">
+                        <label for="fileInput" class="file-input-label">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span class="upload-text">Drop files here or <span class="upload-link">choose</span></span>
+                            <span class="upload-hint">CSV or LIFT format</span>
+                        </label>
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+                </div>
+
+                <!-- Dialect Selection -->
+                <div class="form-group">
+                    <label for="dialectSelect" class="form-label">Select Dialect</label>
+                    <select id="dialectSelect" class="form-select">
+                        <option value="yasin">Yasin</option>
+                        <option value="hunza">Hunza</option>
+                        <option value="nagar">Nagar</option>
+                    </select>
+                </div>
+
+                <!-- Action Button -->
+                <div class="form-group">
+                    <button id="buildBtn" class="btn-primary" onclick="build()">Import & Merge Dictionary</button>
+                </div>
+
+                <!-- Info Text -->
+                <div class="info-text">
+                    <strong>How it works:</strong> New entries will be merged with the existing dictionary. Duplicate entries are automatically skipped.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="overlay" class="d-none">
+        <div class="overlay-content">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="assets/js/dic_build.js"></script>
+</body>
+</html>
+

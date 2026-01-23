@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Girmin – Welcome</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: #faf9f6;
+            font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
+            color: #232323;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .welcome-container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.06);
+            padding: 48px 36px 36px 36px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        .welcome-logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 18px;
+        }
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
+        .welcome-desc {
+            color: #8b4513;
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+        .welcome-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .welcome-btn {
+            background: #f5f1eb;
+            color: #8b4513;
+            border: 1px solid #e0d8c8;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 14px 0;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .welcome-btn:hover {
+            background: #8b4513;
+            color: #fff;
+        }
+        .recent-list {
+            margin: 0 0 18px 0;
+            padding: 0;
+            list-style: none;
+        }
+        .recent-list li {
+            margin-bottom: 8px;
+            font-size: 1rem;
+            color: #232323;
+            background: #f8f6f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .recent-list li:hover {
+            background: #e0d8c8;
+        }
+        .add-dictionary-link {
+            display: block;
+            margin-top: 24px;
+            color: #8b4513;
+            font-size: 1rem;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .add-dictionary-link:hover {
+            color: #b07d4a;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <img src="assets/girmin-icon.svg" alt="Girmin" class="welcome-logo">
+        <div class="welcome-title">Welcome to Girmin</div>
+        <div class="welcome-desc">Your professional book and dictionary editor</div>
+        <div id="continueSection"></div>
+        <ul class="recent-list" id="recentBooksList" style="display:none;"></ul>
+        <div class="welcome-actions">
+            <button class="welcome-btn" onclick="newBook()">New Book</button>
+            <button class="welcome-btn" id="loadBookBtn">Load Book</button>
+            <input type="file" id="loadBookInput" accept="application/json" style="display:none;" />
+        </div>
+        <span class="add-dictionary-link" onclick="addDictionary()">Add a dictionary for spelling</span>
+    </div>
+    <script>
+        // Show 'Continue where you left off' if last open book exists
+        const lastOpen = JSON.parse(localStorage.getItem('girmin_last_open') || 'null');
+        const continueSection = document.getElementById('continueSection');
+        if (lastOpen && lastOpen.title) {
+            const btn = document.createElement('button');
+            btn.className = 'welcome-btn';
+            btn.style = 'margin-bottom:18px;font-size:1.15rem;font-weight:700;background:#8b4513;color:#fff;';
+            btn.innerHTML = `Continue where you left off<br><span style='font-size:1rem;font-weight:400;'>${lastOpen.title}</span>`;
+            btn.onclick = () => openRecentBook(lastOpen);
+            continueSection.appendChild(btn);
+        }
+        // Show recent books if any (excluding last open)
+        const recentBooks = JSON.parse(localStorage.getItem('girmin_recent_books') || '[]');
+        const recentList = document.getElementById('recentBooksList');
+        let shown = 0;
+        if (recentBooks.length > 0) {
+            recentBooks.slice(0, 5).forEach(book => {
+                if (lastOpen && lastOpen.title && book.title === lastOpen.title) return;
+                const li = document.createElement('li');
+                li.textContent = book.title || book.filename || 'Untitled Book';
+                li.onclick = () => openRecentBook(book);
+                recentList.appendChild(li);
+                shown++;
+            });
+        }
+        if (shown > 0) recentList.style.display = '';
+        function newBook() {
+            window.location.href = 'book-metadata.html?new=true';
+        }
+        // Load Book: open file picker, load file, save to localStorage, then open editor
+        document.getElementById('loadBookBtn').onclick = function() {
+            document.getElementById('loadBookInput').click();
+        };
+        document.getElementById('loadBookInput').onchange = function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    localStorage.setItem('girmin_book_autosave', JSON.stringify(data));
+                    if (data.title) {
+                        localStorage.setItem('girmin_last_open', JSON.stringify({title: data.title}));
+                    }
+                    // Store file name for seamless save in editor
+                    if (file.name) {
+                        localStorage.setItem('girmin_current_file_name', file.name);
+                    }
+                    // Hide welcome screen immediately for seamless transition
+                    document.body.innerHTML = '';
+                    window.location.href = 'editor.html';
+                } catch (err) {
+                    alert('Invalid or corrupt book file.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        };
+        function addDictionary() {
+            window.location.href = 'setup.html#dictionary';
+        }
+        function openRecentBook(book) {
+            localStorage.setItem('girmin_last_open', JSON.stringify(book));
+            document.body.innerHTML = '';
+            window.location.href = 'editor.html?open=1';
+        }
+    </script>
+</body>
+</html>
