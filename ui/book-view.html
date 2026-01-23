@@ -67,7 +67,7 @@
                 }
         body {
             font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
-            background: #faf9f6;
+            background: #fff;
             color: #232323;
             line-height: 1.8;
             min-height: 100vh;
@@ -133,8 +133,8 @@
             width: 100%;
             max-width: 720px;
             background: #fff;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.06);
-            border-radius: 18px;
+            box-shadow: none;
+            border-radius: 0;
             margin: 48px 0 48px 0;
             overflow: hidden;
             min-height: 60vh;
@@ -142,7 +142,7 @@
         .book-cover {
             padding: 80px 40px 60px 40px;
             text-align: center;
-            background: linear-gradient(135deg, #faf9f6 0%, #f5f1eb 100%);
+            background: #fff;
             border-bottom: none;
             min-height: 320px;
             display: flex;
@@ -574,6 +574,22 @@
             padding: 30px 0;
             border-top: 1px solid var(--border-color);
             margin-top: 60px;
+        }
+        /* Print page numbers in footer */
+        @media print {
+            @page {
+                size: A4;
+                margin: 2.5cm 2.5cm 2.5cm 2.5cm;
+                /* Print page number in footer */
+                @bottom-center {
+                    content: "Page " counter(page);
+                    font-size: 12pt;
+                    color: #999;
+                }
+            }
+            .page-number {
+                display: none !important;
+            }
         }
 
         /* RTL Support */
@@ -1015,10 +1031,15 @@
             bookHTML += generateBookTOCFromStructure(bookData, isRTL);
 
             // Front Matter (if any)
-            if (frontMatterContent) {
+            // Add dummy preface if none exists
+            let fmContent = frontMatterContent;
+            if (!frontMatterContent.includes('Preface')) {
+                fmContent = `<h2 class="section-title">Preface</h2><div class="section-content">This is a dummy preface. It introduces the book, its purpose, and what the reader can expect. You can replace this with your own text.</div>` + frontMatterContent;
+            }
+            if (fmContent) {
                 bookHTML += `
                     <div class="book-front-matter${isRTL ? ' rtl' : ''}">
-                        ${frontMatterContent}
+                        ${fmContent}
                     </div>
                 `;
             }
@@ -1031,10 +1052,15 @@
             `;
 
             // Back Matter (if any)
-            if (backMatterContent) {
+            // Add dummy glossary if none exists
+            let bmContent = backMatterContent;
+            if (!backMatterContent.includes('Glossary')) {
+                bmContent += `<h2 class="section-title">Glossary</h2><div class="section-content"><b>Dummy Glossary:</b><br>Term 1: Definition for term 1.<br>Term 2: Definition for term 2.<br>Term 3: Definition for term 3.</div>`;
+            }
+            if (bmContent) {
                 bookHTML += `
                     <div class="book-back-matter${isRTL ? ' rtl' : ''}">
-                        ${backMatterContent}
+                        ${bmContent}
                     </div>
                 `;
             }
@@ -1051,8 +1077,45 @@
                 `;
             }
 
-            // Page number
-            bookHTML += `<div class="page-number">— ❧ —</div>`;
+            // Dynamic page number (browser) - only for chapters
+            bookHTML += `<div class="page-number" id="browserPageNumber" style="display:none"></div>`;
+                // Dynamic browser page number logic (only for chapters)
+                function updateBrowserPageNumber() {
+                    const bookContent = document.getElementById('bookContent');
+                    const pageNumberDiv = document.getElementById('browserPageNumber');
+                    if (!bookContent || !pageNumberDiv) return;
+                    // Only show page number if chapters are visible
+                    const chaptersVisible = bookContent && bookContent.offsetParent !== null && bookContent.innerHTML.trim() !== '';
+                    if (chaptersVisible) {
+                        pageNumberDiv.style.display = '';
+                        // Estimate page count based on scroll height and viewport
+                        const pageHeight = window.innerHeight;
+                        const contentHeight = bookContent.scrollHeight;
+                        const currentPage = Math.max(1, Math.round(window.scrollY / pageHeight) + 1);
+                        const totalPages = Math.max(1, Math.round(contentHeight / pageHeight));
+                        pageNumberDiv.textContent = `Page ${currentPage} of ${totalPages}`;
+                    } else {
+                        pageNumberDiv.style.display = 'none';
+                    }
+                }
+                window.addEventListener('scroll', updateBrowserPageNumber);
+                window.addEventListener('resize', updateBrowserPageNumber);
+                setTimeout(updateBrowserPageNumber, 500);
+        // Dynamic browser page number logic
+        function updateBrowserPageNumber() {
+            const bookContent = document.getElementById('bookContent');
+            const pageNumberDiv = document.getElementById('browserPageNumber');
+            if (!bookContent || !pageNumberDiv) return;
+            // Estimate page count based on scroll height and viewport
+            const pageHeight = window.innerHeight;
+            const contentHeight = bookContent.scrollHeight;
+            const currentPage = Math.max(1, Math.round(window.scrollY / pageHeight) + 1);
+            const totalPages = Math.max(1, Math.round(contentHeight / pageHeight));
+            pageNumberDiv.textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+        window.addEventListener('scroll', updateBrowserPageNumber);
+        window.addEventListener('resize', updateBrowserPageNumber);
+        setTimeout(updateBrowserPageNumber, 500);
 
             bookContainer.innerHTML = bookHTML;
                 // ===============================

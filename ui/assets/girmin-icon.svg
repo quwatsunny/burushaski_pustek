@@ -1,38 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="fGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5a2b"/>
-      <stop offset="50%" style="stop-color:#d4a574"/>
-      <stop offset="100%" style="stop-color:#6b4423"/>
-    </linearGradient>
-    <linearGradient id="fWhite" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#f5e6d3"/>
-      <stop offset="50%" style="stop-color:#ffffff"/>
-      <stop offset="100%" style="stop-color:#e8d4be"/>
+    <linearGradient id="ibexBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3a7bd5"/>
+      <stop offset="100%" stop-color="#00d2ff"/>
     </linearGradient>
   </defs>
-  
   <!-- Background -->
-  <rect x="2" y="2" width="60" height="60" rx="12" fill="#faf8f5"/>
-  <rect x="4" y="4" width="56" height="56" rx="10" fill="none" stroke="#d4a574" stroke-width="1.5" opacity="0.7"/>
-  
-  <!-- Feather quill -->
-  <g transform="translate(32, 32) rotate(-35)">
-    <!-- Shaft -->
-    <path d="M0 -24 Q1 0 0 28" stroke="url(#fGrad)" stroke-width="2" fill="none"/>
-    
-    <!-- Left barbs -->
-    <path d="M0 -22 C-8 -18 -18 -10 -20 2 Q-12 -8 0 -12 Z" fill="url(#fWhite)"/>
-    <path d="M0 -12 C-10 -6 -18 5 -16 18 Q-10 5 0 0 Z" fill="url(#fWhite)"/>
-    
-    <!-- Right barbs -->
-    <path d="M0 -22 C8 -18 18 -10 20 2 Q12 -8 0 -12 Z" fill="url(#fWhite)"/>
-    <path d="M0 -12 C10 -6 18 5 16 18 Q10 5 0 0 Z" fill="url(#fWhite)"/>
-    
-    <!-- Nib -->
-    <path d="M-1.5 24 L0 32 L1.5 24 Z" fill="url(#fGrad)"/>
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="#eaf6fb"/>
+  <rect x="4" y="4" width="56" height="56" rx="10" fill="none" stroke="#3a7bd5" stroke-width="1.5" opacity="0.7"/>
+  <!-- Artistic Ibex -->
+  <g>
+    <!-- Horns -->
+    <path d="M20 24 Q10 10 32 8 Q54 10 44 24" stroke="url(#ibexBlue)" stroke-width="3" fill="none"/>
+    <path d="M22 26 Q14 16 32 14 Q50 16 42 26" stroke="url(#ibexBlue)" stroke-width="2" fill="none"/>
+    <!-- Head -->
+    <ellipse cx="32" cy="28" rx="8" ry="7" fill="url(#ibexBlue)" stroke="#1e3a5f" stroke-width="1.5"/>
+    <!-- Eyes -->
+    <circle cx="29" cy="28" r="1.2" fill="#1e3a5f"/>
+    <circle cx="35" cy="28" r="1.2" fill="#1e3a5f"/>
+    <!-- Body -->
+    <ellipse cx="32" cy="42" rx="12" ry="8" fill="url(#ibexBlue)" stroke="#1e3a5f" stroke-width="1.5"/>
+    <!-- Legs -->
+    <rect x="24" y="50" width="2.5" height="8" rx="1" fill="#1e3a5f"/>
+    <rect x="37.5" y="50" width="2.5" height="8" rx="1" fill="#1e3a5f"/>
+    <rect x="28" y="52" width="2" height="7" rx="1" fill="#3a7bd5"/>
+    <rect x="34" y="52" width="2" height="7" rx="1" fill="#3a7bd5"/>
+    <!-- Tail -->
+    <path d="M44 48 Q48 52 42 54" stroke="#1e3a5f" stroke-width="2" fill="none"/>
   </g>
-  
-  <!-- Ink dot -->
-  <circle cx="50" cy="50" r="4" fill="#1e3a5f" opacity="0.8"/>
 </svg>
