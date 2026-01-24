@@ -2,6 +2,8 @@ import webview
 import os
 import json
 import base64
+from tools.dict_db import init_db, add_dictionary, list_dictionaries as db_list_dictionaries
+import sqlite3
 
 from tools.build_from_csv import build_from_csv
 from tools.build_from_lift import build_from_lift
@@ -12,6 +14,62 @@ DICTS_DIR = os.path.join(BASE_DIR, 'dictionaries')
 
 
 class API:
+
+    def delete_dictionary(self, filename):
+        """
+        Delete a dictionary file from the dictionaries folder and remove its metadata from the database.
+        """
+        fpath = os.path.join(DICTS_DIR, filename)
+        if os.path.exists(fpath) and fpath.endswith('.json'):
+            os.remove(fpath)
+            # Remove from database (always use tools/dictionaries.db)
+            db_path = os.path.join(os.path.dirname(__file__), 'tools', 'dictionaries.db')
+            conn = sqlite3.connect(db_path)
+            c = conn.cursor()
+            c.execute('DELETE FROM dictionaries WHERE filename = ?', (filename,))
+            conn.commit()
+            conn.close()
+            return {"success": True}
+        return {"success": False, "error": "File not found"}
+    CONFIG_PATH = os.path.join(BASE_DIR, 'dictionaries', 'dict_config.json')
+
+    def _load_dict_config(self):
+        if os.path.exists(self.CONFIG_PATH):
+            with open(self.CONFIG_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
+
+    def _save_dict_config(self, config):
+        with open(self.CONFIG_PATH, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+
+    def list_dictionaries(self):
+        """
+        List all dictionaries from the SQLite database.
+        """
+        print("[API] list_dictionaries (DB) called")
+        dicts = db_list_dictionaries()
+        print(f"[API] list_dictionaries (DB) returning: {dicts}")
+        return dicts
+
+    def toggle_dictionary(self, filename):
+        """
+        Toggle enable/disable state for a dictionary in the database.
+        Returns new state (True=enabled, False=disabled)
+        """
+        db_path = os.path.join(os.path.dirname(__file__), 'tools', 'dictionaries.db')
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('SELECT enabled FROM dictionaries WHERE filename = ?', (filename,))
+        row = c.fetchone()
+        if row is not None:
+            new_state = 0 if row[0] else 1
+            c.execute('UPDATE dictionaries SET enabled = ? WHERE filename = ?', (new_state, filename))
+            conn.commit()
+            conn.close()
+            return bool(new_state)
+        conn.close()
+        return False
     def export_pdf(self, book_title, data_url):
         """
         Save PDF file sent from JS (data_url is a base64 data URL)
@@ -63,55 +121,88 @@ class API:
     
     def save_file(self, path, content):
         print("Saving file:", path)
-        # If path is not absolute, save to Documents
-        if not os.path.isabs(path):
-            docs_folder = os.path.join(os.path.expanduser('~'), 'Documents')
-            os.makedirs(docs_folder, exist_ok=True)
-            path = os.path.join(docs_folder, path)
-        else:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
+        # Always save to project uploads directory
+        base_dir = os.path.abspath(os.path.dirname(__file__))
+        uploads_dir = os.path.join(base_dir, 'uploads')
+        # Remove any leading uploads/ from path
+        rel_path = path.replace('uploads/', '').replace('uploads\\', '')
+        full_path = os.path.join(uploads_dir, rel_path)
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        with open(full_path, "w", encoding="utf-8") as f:
             f.write(content)
         return "saved"
 
-    def build_dictionary(self, file_path, dialect):
+    def build_dictionary(self, file_path, language_name=None, bcp_code=None, script=None, region=None):
         """
         Build dictionary from file and MERGE with existing dictionary.
         Returns count of new entries added.
         """
         print(f"\n{'='*60}")
-        print(f"Building dictionary from {file_path} for dialect: {dialect}")
+        print(f"Building dictionary from {file_path}")
+        print(f"Language: {language_name}, Code: {bcp_code}, Script: {script}, Region: {region}")
         print(f"{'='*60}")
-        
+
         ext = file_path.split(".")[-1].lower()
-        
+
+        # Use language_name and bcp_code for filename, but check region and script for uniqueness
+        if not language_name or not bcp_code:
+            return {"error": "Language name and BCP code are required"}
+        base_filename = f"{language_name.strip().replace(' ', '_')}-{bcp_code.strip()}"
+        # Search for existing dictionaries with same language, code, region, and script
+        existing_file = None
+        for fname in os.listdir(DICTS_DIR):
+            if fname.startswith(base_filename) and fname.endswith('.json'):
+                fpath = os.path.join(DICTS_DIR, fname)
+                try:
+                    with open(fpath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    if (
+                        data.get('language') == language_name and
+                        data.get('code') == bcp_code and
+                        data.get('region') == region and
+                        data.get('script') == script
+                    ):
+                        existing_file = fname
+                        break
+                except Exception:
+                    continue
+        if existing_file:
+            dict_filename = existing_file
+        else:
+            # If region or script is provided, append to filename for uniqueness
+            region_part = f"_{region.strip().replace(' ', '_')}" if region else ''
+            script_part = f"_{script.strip().replace(' ', '_')}" if script else ''
+            dict_filename = f"{base_filename}{region_part}{script_part}.json"
+        dict_file = os.path.join(DICTS_DIR, dict_filename)
+
         # Convert source file to word list
         try:
+            # For now, use yasin transform as default (or you can add logic to select transform)
+            dialect = "yasin"
             if ext == "csv":
                 new_words_path = build_from_csv(file_path, dialect)
             elif ext == "lift":
                 new_words_path = build_from_lift(file_path, dialect)
             else:
                 return {"error": "Unsupported file type (use CSV or LIFT)"}
-            
+
             # Load the newly built words from the JSON file
             with open(new_words_path, "r", encoding="utf-8") as f:
                 new_words = json.load(f)
-            
+
             if not isinstance(new_words, list):
                 return {"error": "Failed to extract words from file"}
-            
+
             print(f"Extracted {len(new_words)} entries from file")
             print(f"First 5 entries: {new_words[:5]}")
         except Exception as e:
             print(f"Error building from file: {e}")
             return {"error": f"Error processing file: {str(e)}"}
-        
+
         # Load existing dictionary
-        dict_file = os.path.join(DICTS_DIR, f"{dialect}.json")
         existing_words = []
         existing_count = 0
-        
+
         if os.path.exists(dict_file):
             with open(dict_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -119,33 +210,46 @@ class API:
             existing_count = len(existing_words)
             print(f"Existing dictionary has {existing_count} entries")
             print(f"First 5 existing: {existing_words[:5]}")
-        
+
         # Find truly new entries
         existing_set = set(existing_words)
         new_set = set(new_words)
         truly_new = new_set - existing_set
         duplicates = new_set & existing_set
-        
+
         print(f"\nMerge Analysis:")
         print(f"  New entries in file: {len(new_words)}")
         print(f"  Existing entries: {existing_count}")
         print(f"  Duplicates (already in dict): {len(duplicates)}")
         print(f"  Truly new entries: {len(truly_new)}")
-        
+
         if truly_new:
             print(f"  First 5 new: {list(truly_new)[:5]}")
-        
+
         # Merge: keep existing words and add new ones (avoid duplicates)
         merged_words = list(existing_set | new_set)
         merged_words.sort()  # Sort for consistency
-        
-        # Save merged dictionary
+
+        # Save merged dictionary with metadata
+        dict_data = {
+            "language": language_name,
+            "code": bcp_code,
+            "region": region,
+            "script": script,
+            "words": merged_words
+        }
         with open(dict_file, "w", encoding="utf-8") as f:
-            json.dump(merged_words, f, ensure_ascii=False, indent=2)
-        
+            json.dump(dict_data, f, ensure_ascii=False, indent=2)
+
+        # Add or update metadata in the database
+        try:
+            add_dictionary(language_name, bcp_code, region, script, dict_filename, True)
+        except Exception as e:
+            print(f"[DB] Error adding dictionary metadata: {e}")
+
         print(f"\n✓ Dictionary saved with {len(merged_words)} total entries")
         print(f"{'='*60}\n")
-        
+
         # Build user-friendly message
         if len(truly_new) == 0 and len(duplicates) > 0:
             message = f"✓ No new entries added ({len(duplicates)} entries were already in dictionary). Total: {len(merged_words)} words"
@@ -155,7 +259,7 @@ class API:
             message = f"✓ Success! {len(truly_new)} new entries added, {len(duplicates)} entries already in dictionary. Total: {len(merged_words)} words"
         else:
             message = f"Merge complete. Total: {len(merged_words)} words"
-        
+
         return {
             "success": True,
             "total_words": len(merged_words),
@@ -254,8 +358,9 @@ class API:
 
 
 if __name__ == "__main__":
+    from tools.dict_db import init_db
+    init_db()
     api = API()
-    
     # Launch with the book editor window
     start_url = "ui/editor.html"
 

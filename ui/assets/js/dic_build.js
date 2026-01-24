@@ -46,18 +46,28 @@ function updateFileName() {
 async function build() {
     const overlay = document.getElementById("overlay");
     const fileInput = document.getElementById("fileInput");
-    const dialect = document.getElementById("dialectSelect").value;
+    const languageName = document.getElementById("languageName").value;
+    const bcpCode = document.getElementById("bcpCode").value;
+    const script = document.getElementById("script").value;
+    const region = document.getElementById("region").value;
 
     if (!fileInput.files.length) {
         showAlert("Please select a file", "danger");
         return;
     }
+    // Optionally validate new fields here
+    // Example: if (!languageName || !bcpCode) { ... }
 
     // Show overlay
     overlay.classList.remove("d-none");
 
     try {
         const file = fileInput.files[0];
+        // Log new fields for now
+        console.log("Language Name:", languageName);
+        console.log("BCP 47 Code:", bcpCode);
+        console.log("Script:", script);
+        console.log("Region:", region);
 
         // Sanitize filename
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -72,8 +82,8 @@ async function build() {
         console.log("Saving file to:", filePath);
         await window.pywebview.api.save_file(filePath, content);
         
-        console.log("Merging dictionary for:", dialect);
-        const result = await window.pywebview.api.build_dictionary(filePath, dialect);
+        // Pass new fields to API
+        const result = await window.pywebview.api.build_dictionary(filePath, languageName, bcpCode, script, region);
         
         console.log("API Result:", result);
         console.log("Result type:", typeof result);
@@ -114,15 +124,12 @@ async function build() {
 document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("fileInput");
     const buildBtn = document.getElementById("buildBtn");
-    
     if (fileInput) {
         fileInput.addEventListener("change", updateFileName);
     }
-    
     if (buildBtn) {
         buildBtn.addEventListener("click", build);
     }
-    
     // Drag and drop
     const fileLabel = document.querySelector(".file-input-label");
     if (fileLabel) {
@@ -130,15 +137,12 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             fileLabel.style.background = "#e7f1ff";
         });
-        
         fileLabel.addEventListener("dragleave", () => {
             fileLabel.style.background = "#f8f9fa";
         });
-        
         fileLabel.addEventListener("drop", (e) => {
             e.preventDefault();
             fileLabel.style.background = "#f8f9fa";
-            
             if (e.dataTransfer.files.length > 0) {
                 fileInput.files = e.dataTransfer.files;
                 updateFileName();

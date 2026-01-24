@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Dictionaries</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="card">
+            <a href="editor.html" class="back-link" style="margin-bottom: 0; margin-top: 8px;">← Back to Editor</a>
+            <div class="card-header">
+                <h1 style="margin-bottom: 0;">Dictionary Management</h1>
+                <p style="margin-top: 4px; color: #888;">Enable or disable dictionaries for use in the editor.</p>
+            </div>
+            <div class="card-body" id="dictManagerBody">
+                <div id="dictList"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Fixed Bottom Bar -->
+    <div class="bottom-bar">
+        <div class="bottom-bar-left">
+            <a href="editor.html" class="btn-secondary" style="min-width: 120px; text-align:center; display:inline-block;">Editor</a>
+            <span style="margin-left: 10px; color: #888;">Manage Dictionaries</span>
+        </div>
+        <div class="bottom-bar-center">
+            <span class="copyright-text">© 2026 Quwat K. Sunny. Girmin - All Rights Reserved.</span>
+        </div>
+        <div class="bottom-bar-right">
+            <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dim Mode" onclick="toggleTheme && toggleTheme()">🌙</button>
+            <span class="status-text">Girmin</span>
+        </div>
+    </div>
+    <script src="assets/js/manage_dictionaries.js"></script>
+    <script>
+    // Theme toggle fallback if not defined
+    if (typeof toggleTheme !== 'function') {
+        window.toggleTheme = function() {
+            document.body.classList.toggle('dim-theme');
+        };
+    }
+    </script>
+</body>
+</html>

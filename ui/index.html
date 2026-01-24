@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <a href="editor.html" style="position: absolute; top: 18px; left: 24px; z-index: 1000; text-decoration: none; color: #0071e3; font-weight: 600; font-size: 16px;">← Back to Editor</a>
+    <a href="manage-dictionaries.html" style="position: absolute; top: 18px; right: 24px; z-index: 1000; text-decoration: none; color: #0071e3; font-weight: 600; font-size: 16px;">Manage Dictionaries</a>
     <div class="main-container">
         <div class="card">
             <div class="card-header">
@@ -36,13 +38,26 @@
                 </div>
 
                 <!-- Dialect Selection -->
-                <div class="form-group">
-                    <label for="dialectSelect" class="form-label">Select Dialect</label>
-                    <select id="dialectSelect" class="form-select">
-                        <option value="yasin">Yasin</option>
-                        <option value="hunza">Hunza</option>
-                        <option value="nagar">Nagar</option>
-                    </select>
+                <!-- Dialect Selection Removed -->
+
+                <!-- Language Details -->
+                <div class="form-group" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 140px;">
+                        <label for="languageName" class="form-label">Language Name</label>
+                        <input type="text" id="languageName" class="form-input" placeholder="e.g. Burushaski">
+                    </div>
+                    <div style="flex: 1; min-width: 120px;">
+                        <label for="bcpCode" class="form-label">BCP 47 Code</label>
+                        <input type="text" id="bcpCode" class="form-input" placeholder="e.g. bsk">
+                    </div>
+                    <div style="flex: 1; min-width: 100px;">
+                        <label for="script" class="form-label">Script</label>
+                        <input type="text" id="script" class="form-input" placeholder="e.g. Arab">
+                    </div>
+                    <div style="flex: 1; min-width: 80px;">
+                        <label for="region" class="form-label">Region</label>
+                        <input type="text" id="region" class="form-input" placeholder="e.g. PK">
+                    </div>
                 </div>
 
                 <!-- Action Button -->

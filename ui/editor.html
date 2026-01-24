@@ -34,6 +34,7 @@
                         <div class="mega-menu-divider"></div>
                         <a href="book-view.html" class="mega-menu-item">📖 View Book</a>
                         <a href="setup.html" class="mega-menu-item">Settings</a>
+                        <a href="manage-dictionaries.html" class="mega-menu-item">Manage Dictionaries</a>
                     </div>
                 </div>
                 <a href="book-metadata.html" class="mega-menu-trigger" title="Book Info">Info</a>
@@ -211,9 +212,9 @@
         <div class="bottom-bar-left">
             <select id="dialectSelect" class="dialect-select" title="Dictionary" aria-label="Select dictionary language">
                 <option value="">Select Language</option>
-                <option value="yasin">Yasin</option>
-                <option value="hunza">Hunza</option>
             </select>
+            <button id="importDictionaryBtn" class="btn-secondary" style="margin-left: 10px; min-width: 90px;" onclick="window.location.href='index.html'">Import Dictionary</button>
+            <a href="manage-dictionaries.html" class="btn-secondary" style="margin-left: 10px; min-width: 90px; text-align:center; display:inline-block;">Manage Dictionaries</a>
             <span id="wordCount" class="word-count-label"></span>
         </div>
         <div class="bottom-bar-center">

@@ -1,3 +1,63 @@
+/* Dictionary Management Table Action Buttons */
+.dict-update-btn, .dict-delete-btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    margin: 0 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: background 0.2s, color 0.2s;
+}
+.dict-update-btn {
+    background: #f5f5f7;
+    color: #0071e3;
+    border: 1px solid #d2d2d7;
+}
+.dict-update-btn:hover {
+    background: #e8e8ed;
+    color: #005bb5;
+}
+.dict-delete-btn {
+    background: #fff0f0;
+    color: #d7263d;
+    border: 1px solid #f5c2c7;
+}
+.dict-delete-btn:hover {
+    background: #ffd6d6;
+    color: #a8001c;
+}
+/* Dictionary Management Table Button Styles */
+.dict-toggle-btn {
+    padding: 7px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    transition: background 0.2s, color 0.2s;
+    outline: none;
+    margin: 0 2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.dict-toggle-btn.enabled {
+    background: #0071e3;
+    color: #fff;
+    border: none;
+}
+.dict-toggle-btn.disabled {
+    background: #e8e8ed;
+    color: #888;
+    border: none;
+}
+.dict-toggle-btn:hover {
+    background: #0077ed;
+    color: #fff;
+}
 /* Modern custom scrollbar styles */
 ::-webkit-scrollbar {
     width: 10px;
@@ -198,7 +258,9 @@ body {
     max-width: none;
     margin: 0;
     display: flex;
-    height: calc(100vh - 28px);
+    height: auto;
+    min-height: calc(100vh - 28px);
+    overflow-y: auto;
 }
 
 /* ========================================
@@ -282,7 +344,7 @@ body {
     border: none;
     border-radius: 8px;
     box-shadow: var(--shadow-light);
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .card-header {
@@ -312,6 +374,8 @@ body {
 .card-body {
     padding: 24px;
     border-radius: 0 0 8px 8px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 /* ========================================
@@ -379,12 +443,13 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px 20px;
+    padding: 10px 10px;
     background: #2d2d30;
     border: 2px dashed #4d4d50;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 13px;
 }
 
 .file-input-label:hover {
@@ -399,17 +464,17 @@ body {
 }
 
 .upload-icon {
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     color: #5a8fd9;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .upload-text {
-    font-size: 15px;
+    font-size: 13px;
     color: #e5e5e7;
     font-weight: 500;
-    margin: 0 0 4px;
+    margin: 0 0 2px;
 }
 
 .upload-link {

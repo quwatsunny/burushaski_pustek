@@ -209,6 +209,25 @@ function initEditor() {
     editor = document.getElementById('richEditor') || document.getElementById('editor');
     ghostText = document.getElementById('ghostText');
     dialectSelect = document.getElementById('dialectSelect');
+    // Dynamically populate language/dictionary options
+    if (dialectSelect && window.pywebview && window.pywebview.api && window.pywebview.api.list_dictionaries) {
+        // Clear previous options except the first (placeholder)
+        while (dialectSelect.options.length > 1) {
+            dialectSelect.remove(1);
+        }
+        window.pywebview.api.list_dictionaries().then(dicts => {
+            dicts.forEach(d => {
+                let label = d.language;
+                if (d.script) label += ' [' + d.script + ']';
+                if (d.region) label += ' (' + d.region + ')';
+                else if (d.code) label += ' (' + d.code + ')';
+                const opt = document.createElement('option');
+                opt.value = d.filename.replace('.json','');
+                opt.textContent = label;
+                dialectSelect.appendChild(opt);
+            });
+        });
+    }
     wordCount = document.getElementById('wordCount');
     suggestionsList = document.getElementById('suggestionsList');
 
