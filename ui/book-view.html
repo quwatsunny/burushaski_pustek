@@ -6,6 +6,7 @@
     <title>Book Viewer</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/toc-book.css">
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
     <script src="assets/js/html2pdf.bundle.min.js"></script>
     <style>
                 /* --- PRINT STYLES FOR PROFESSIONAL PRINTING --- */
@@ -1014,6 +1015,15 @@
             // Determine text direction
             const isRTL = detectRTL(allContent);
 
+            // Set body font for RTL
+            if (isRTL) {
+                document.body.style.fontFamily = "'Noto Nastaliq Urdu', 'Amiri', serif";
+                document.body.style.direction = 'rtl';
+            } else {
+                document.body.style.fontFamily = "'Merriweather', 'Noto Serif', Georgia, serif";
+                document.body.style.direction = 'ltr';
+            }
+
             // Build the book HTML
             let bookHTML = '';
 
@@ -1520,7 +1530,7 @@
          */
         document.addEventListener('click', function(event) {
             const menu = document.getElementById('ipaContextMenu');
-            if (!menu.contains(event.target)) {
+            if (menu && !menu.contains(event.target)) {
                 hideIPAMenu();
             }
         });
@@ -1574,19 +1584,95 @@
         }
 
         function exportBookToWord() {
-            const { bookTitle, chapters } = getBookExportData();
-            if (window.pywebview && window.pywebview.api && window.pywebview.api.export_word) {
-                window.pywebview.api.export_word(bookTitle, chapters)
-                    .then(res => {
-                        if (res && res.success) {
-                            alert('Word file exported successfully!');
-                        } else {
-                            alert('Word export failed: ' + (res && res.error ? res.error : 'Unknown error'));
+                        showNotification('Export to Word triggered');
+                        const bookContainer = document.getElementById('bookContainer');
+                        if (!bookContainer || !bookContainer.innerHTML.trim()) {
+                            showNotification('No book content to export.');
+                            return;
                         }
-                    });
-            } else {
-                alert('Word export not available in this environment.');
+            const { bookTitle, chapters } = getBookExportData();
+            if (!window.docx) {
+                alert('docx.js library not loaded.');
+                return;
             }
+            // Helper to convert HTML to docx.js Paragraphs
+            function htmlToDocxParagraphs(html) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const children = [];
+                function parseNode(node, parentStyles = {}) {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        let style = { bold: false, italics: false, link: null };
+                        if (parentStyles) style = { ...parentStyles };
+                        if (node.tagName === 'B' || node.tagName === 'STRONG') style.bold = true;
+                        if (node.tagName === 'I' || node.tagName === 'EM') style.italics = true;
+                        if (node.tagName === 'A' && node.href) style.link = node.href;
+
+                        if (['P','H1','H2','H3','LI'].includes(node.tagName)) {
+                            let runs = [];
+                            node.childNodes.forEach(child => {
+                                if (child.nodeType === Node.TEXT_NODE) {
+                                    let run = new window.docx.TextRun({ text: child.textContent, bold: style.bold, italics: style.italics });
+                                    if (style.link) run = new window.docx.TextRun({ text: child.textContent, style: 'Hyperlink' });
+                                    runs.push(run);
+                                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                                    runs = runs.concat(parseNode(child, style));
+                                }
+                            });
+                            let paraProps = {};
+                            if (node.tagName === 'H1') paraProps.heading = window.docx.HeadingLevel.HEADING_1;
+                            if (node.tagName === 'H2') paraProps.heading = window.docx.HeadingLevel.HEADING_2;
+                            if (node.tagName === 'H3') paraProps.heading = window.docx.HeadingLevel.HEADING_3;
+                            if (node.tagName === 'LI' && node.parentElement && node.parentElement.tagName === 'UL') paraProps.bullet = { level: 0 };
+                            if (node.tagName === 'LI' && node.parentElement && node.parentElement.tagName === 'OL') paraProps.numbering = { reference: 'numbered-list', level: 0 };
+                            children.push(new window.docx.Paragraph({ children: runs, ...paraProps }));
+                        } else if (node.tagName === 'UL' || node.tagName === 'OL') {
+                            node.childNodes.forEach(child => parseNode(child, style));
+                        } else {
+                            node.childNodes.forEach(child => parseNode(child, style));
+                        }
+                    } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                        children.push(new window.docx.Paragraph({ children: [new window.docx.TextRun({ text: node.textContent.trim() })] }));
+                    }
+                    return children;
+                }
+                tempDiv.childNodes.forEach(node => parseNode(node));
+                return children;
+            }
+
+            // Create a new docx document with metadata
+            const doc = new window.docx.Document({
+                creator: "Girmin Book Editor",
+                title: bookTitle || "Book"
+            });
+
+            // Add book title and chapters with formatted content
+            let docChildren = [
+                new window.docx.Paragraph({
+                    text: bookTitle,
+                    heading: window.docx.HeadingLevel.HEADING_1,
+                    spacing: { after: 400 }
+                })
+            ];
+            chapters.forEach(ch => {
+                if (ch.title) {
+                    docChildren.push(new window.docx.Paragraph({ text: ch.title, heading: window.docx.HeadingLevel.HEADING_2 }));
+                }
+                docChildren = docChildren.concat(htmlToDocxParagraphs(ch.content));
+            });
+            doc.addSection({ children: docChildren });
+
+            window.docx.Packer.toBlob(doc).then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = (bookTitle || 'Book') + '.docx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                alert('Word file exported successfully!');
+            }).catch(err => {
+                alert('Word export failed: ' + err);
+            });
         }
 
         function exportBookToPdf() {

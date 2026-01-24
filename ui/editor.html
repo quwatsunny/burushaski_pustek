@@ -19,8 +19,7 @@
     <div class="main-container">
         <!-- Book Editor Sidebar -->
         <nav class="book-sidebar" role="navigation" aria-label="Book Navigation">
-            <div class="sidebar-header">
-                <img src="assets/girmin-icon.svg" alt="Girmin" class="sidebar-logo" title="Girmin" style="width: 28px; height: 28px; border-radius: 6px;">
+            <div class="sidebar-header" style="position: relative;">
                 <div class="mega-menu">
                     <button class="mega-menu-trigger" type="button">File</button>
                     <div class="mega-menu-dropdown">
@@ -29,15 +28,13 @@
                         <button id="saveBookBtn" class="mega-menu-item" type="button" onclick="saveBookToFile()">Save</button>
                         <div class="mega-menu-divider"></div>
                         <button id="importFileBtn" class="mega-menu-item" type="button" onclick="handleImportClick()">Import</button>
-                        <button id="exportWordBtn" class="mega-menu-item" type="button" onclick="exportToWord()">Export Word</button>
                         <button id="exportPdfBtn" class="mega-menu-item" type="button" onclick="exportToPdf()">Export PDF</button>
                         <div class="mega-menu-divider"></div>
-                        <a href="book-view.html" class="mega-menu-item">📖 View Book</a>
                         <a href="setup.html" class="mega-menu-item">Settings</a>
-                        <a href="manage-dictionaries.html" class="mega-menu-item">Manage Dictionaries</a>
                     </div>
                 </div>
                 <a href="book-metadata.html" class="mega-menu-trigger" title="Book Info">Info</a>
+                <a href="book-view.html" class="mega-menu-trigger" title="View Book" style="margin-left: 8px;">View</a>
             </div>
             <div class="sidebar-book-title" id="sidebarBookTitle">Untitled Book</div>
             <div class="sidebar-quick-actions">
@@ -210,11 +207,11 @@
     <!-- Fixed Bottom Bar -->
     <div class="bottom-bar">
         <div class="bottom-bar-left">
-            <select id="dialectSelect" class="dialect-select" title="Dictionary" aria-label="Select dictionary language">
-                <option value="">Select Language</option>
+            <select id="dialectSelect" class="dialect-select" title="Dictionary" aria-label="Select dictionary">
+                <option value="">Select Dictionary</option>
             </select>
-            <button id="importDictionaryBtn" class="btn-secondary" style="margin-left: 10px; min-width: 90px;" onclick="window.location.href='index.html'">Import Dictionary</button>
-            <a href="manage-dictionaries.html" class="btn-secondary" style="margin-left: 10px; min-width: 90px; text-align:center; display:inline-block;">Manage Dictionaries</a>
+            <a href="index.html#import-dictionary" id="addDictionaryLink" title="Add Dictionary" style="margin-left: 8px; font-size: 1.2em; vertical-align: middle;">➕ Add</a>
+            </select>
             <span id="wordCount" class="word-count-label"></span>
         </div>
         <div class="bottom-bar-center">
@@ -222,7 +219,6 @@
         </div>
         <div class="bottom-bar-right">
             <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dim Mode" onclick="toggleTheme()">🌙</button>
-            <span class="status-text">Girmin</span>
         </div>
     </div>
 

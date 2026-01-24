@@ -29,7 +29,6 @@ function loadDictionaries(retries = 10) {
                     <th style="padding:8px 6px; border-bottom:1px solid #eee; text-align:left;">Code</th>
                     <th style="padding:8px 6px; border-bottom:1px solid #eee; text-align:left;">Region</th>
                     <th style="padding:8px 6px; border-bottom:1px solid #eee; text-align:left;">Script</th>
-                    <th style="padding:8px 6px; border-bottom:1px solid #eee; text-align:left;">Filename</th>
                     <th style="padding:8px 6px; border-bottom:1px solid #eee; text-align:left;">Actions</th>
                 </tr>
             </thead>
@@ -44,7 +43,6 @@ function loadDictionaries(retries = 10) {
                 <td style="padding:7px 6px;">${d.code || ''}</td>
                 <td style="padding:7px 6px;">${d.region || ''}</td>
                 <td style="padding:7px 6px;">${d.script || ''}</td>
-                <td style="padding:7px 6px; color:#888; font-size:13px;">${d.filename}</td>
                 <td style="padding:7px 6px; display:flex; gap:6px;">
                     <button class="dict-toggle-btn ${d.enabled ? 'enabled' : 'disabled'}">${d.enabled ? 'Disable' : 'Enable'}</button>
                     <button class="dict-update-btn">Update</button>

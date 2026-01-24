@@ -216,7 +216,10 @@ function initEditor() {
             dialectSelect.remove(1);
         }
         window.pywebview.api.list_dictionaries().then(dicts => {
-            dicts.forEach(d => {
+            let selectedIdx = 0;
+            let browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+            let enabledDicts = dicts.filter(d => d.enabled !== false);
+            enabledDicts.forEach((d, idx) => {
                 let label = d.language;
                 if (d.script) label += ' [' + d.script + ']';
                 if (d.region) label += ' (' + d.region + ')';
@@ -224,8 +227,16 @@ function initEditor() {
                 const opt = document.createElement('option');
                 opt.value = d.filename.replace('.json','');
                 opt.textContent = label;
+                // Auto-select if only one dictionary or language matches browser
+                if (enabledDicts.length === 1 || (d.language && d.language.toLowerCase() === browserLang)) {
+                    selectedIdx = idx + 1; // +1 for placeholder
+                }
                 dialectSelect.appendChild(opt);
             });
+            if (selectedIdx > 0) {
+                dialectSelect.selectedIndex = selectedIdx;
+                dialectSelect.dispatchEvent(new Event('change'));
+            }
         });
     }
     wordCount = document.getElementById('wordCount');
@@ -371,7 +382,7 @@ function loadDictionary() {
 function handleDictionaryLoaded(words) {
     if (Array.isArray(words)) {
         dictionary = words;
-        if (wordCount) wordCount.textContent = 'Dictionary Loaded';
+        if (wordCount) wordCount.textContent = '';
     } else {
         dictionary = [];
         if (wordCount) wordCount.textContent = 'Error';
@@ -3928,9 +3939,7 @@ function createIPAMenu() {
     if (ipaMenu) return ipaMenu;
     ipaMenu = document.createElement('div');
     ipaMenu.className = 'ipa-context-menu';
-    ipaMenu.innerHTML = `
-        <div class="ipa-menu-item" id="ipaConvertBtn">Convert to IPA</div>
-    `;
+    ipaMenu.innerHTML = ``;
     document.body.appendChild(ipaMenu);
     return ipaMenu;
 }

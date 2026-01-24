@@ -10,7 +10,7 @@
       "paragraphs": [
         {
           "title": "Paragraph 1",
-          "content": ""
+          "content": "یہ ہمارا پیش لفط ہو گا، می گُتے جغا چی میࣷن کا اپان دیࣷے بو سیم با&nbsp; گُتے مئیمی شُوا۔ درْکُت&nbsp; سیࣷس آپان کا می دا بو سیاࣷن"
         }
       ],
       "footnotes": []
@@ -23,8 +23,7 @@
           "title": "Paragraph 1",
           "content": "<p class=\"\">Chapter 1 – The Shop on Willow Street<br></p><span class=\"\" style=\"background-color: transparent;\"></span><p class=\"\"><span class=\"\" style=\"background-color: transparent;\"><br></span></p><p class=\"\"><span class=\"\" style=\"background-color: transparent;\">The clockmaker’s shop sat quietly between a bakery and a tailor. Tomas, twelve years old, stepped inside and entered a world of brass gears and steady ticking. He did not yet know how much this place would change him. Time</span><span style=\"background-color: transparent;\">&nbsp;reveals what we overlook. This short </span><span style=\"background-color: transparent;\">follows a young apprentice who discovers that every tick of a clock carries meaning.</span></p>"
         }
-      ],
-      "footnotes": []
+      ]
     },
     {
       "title": "Chapter 2 – Master Aurelin",
@@ -34,8 +33,7 @@
           "title": "Paragraph 1",
           "content": "<p class=\"\"></p><h2>Chapter 2 – Master Aurelin</h2>\nMaster Aurelin spoke little but understood every machine. He taught Tomas that clocks were not just built, they were listened to. “Every mechanism has a story,” he said.<p></p>"
         }
-      ],
-      "footnotes": []
+      ]
     },
     {
       "title": "Chapter 4",
@@ -45,13 +43,12 @@
           "title": "Paragraph 1",
           "content": ""
         }
-      ],
-      "footnotes": []
+      ]
     }
   ],
   "backMatter": [],
   "references": [],
-  "currentChapter": 3,
+  "currentChapter": 0,
   "currentParagraph": 0,
   "currentSection": "chapters",
   "currentSectionIndex": 0
