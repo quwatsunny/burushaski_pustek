@@ -489,21 +489,75 @@
 
         .footnotes-section {
             margin-top: 60px;
-            padding-top: 30px;
-            border-top: 1px solid var(--border-color);
+            padding: 32px 0 0 0;
+            border: none !important;
+            background: none !important;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #444;
+            font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
         }
-
         .footnotes-section h3 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: #666;
+            font-size: 1.25rem;
+            margin-bottom: 18px;
+            color: #222;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border-bottom: 1.5px solid #bbb;
+            padding-bottom: 6px;
+            text-align: left;
+        }
+        .reference-item, .footnote-item {
+            margin-bottom: 10px;
+            padding-left: 2em;
+            text-indent: 0;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #333;
+            position: relative;
+        }
+        .reference-item:before, .footnote-item sup {
+            color: #8b4513;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0.1em;
+        }
+        .reference-item:before {
+            content: attr(data-refnum) ". ";
+        }
+        .footnote-item sup {
+            font-size: 0.85em;
         }
 
-        .footnote-item {
-            font-size: 14px;
-            margin-bottom: 10px;
-            padding-left: 30px;
-            text-indent: -30px;
+        /* References Section */
+        .references-section {
+            margin-top: 60px;
+            padding: 32px 0 0 0;
+            border: none !important;
+            background: none !important;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #444;
+            font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
+        }
+        .references-section h3 {
+            font-size: 1.25rem;
+            margin-bottom: 18px;
+            color: #222;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border-bottom: 1.5px solid #bbb;
+            padding-bottom: 6px;
+            text-align: left;
+        }
+        .reference-item {
+            margin-bottom: 15px;
+            padding-left: 40px;
+            text-indent: -40px;
+            font-size: 15px;
         }
 
         /* Front Matter Section */
@@ -545,26 +599,6 @@
 
         .book-back-matter .section-content {
             margin-bottom: 40px;
-        }
-
-        /* References Section */
-        .references-section {
-            margin-top: 60px;
-            padding-top: 30px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .references-section h3 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .reference-item {
-            margin-bottom: 15px;
-            padding-left: 40px;
-            text-indent: -40px;
-            font-size: 15px;
         }
 
         /* Page Numbers */
