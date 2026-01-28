@@ -8,3 +8,5 @@ uploads/
 *.log
 .env
 node_modules/
+ElectronJS/node_modules/
+ElectronJS/dist/

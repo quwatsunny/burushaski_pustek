@@ -1,6 +1,9 @@
-# Flask + Electron Desktop App
+# Burushaski Pustek -Software
 
-This project lets you run your Flask backend and UI as a desktop app using Electron.
+This project was initiated for the Burusho Community to write books in the Burushaski language. It has now been expanded to other languages. Any minority language can use it to write books. The two unique things about this project are:
+
+You can upload a custom dictionary of the minority language for spelling checks and auto completion of words which ensures speeed and accuracy.
+You can select any text and convert to IPA
 
 ## How to Run
 
