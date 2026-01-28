@@ -68,7 +68,7 @@
                 }
         body {
             font-family: 'Merriweather', 'Noto Serif', Georgia, serif;
-            background: #fff;
+            background: none;
             color: #232323;
             line-height: 1.8;
             min-height: 100vh;
@@ -78,7 +78,7 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 56px;
-            background: rgba(255,255,255,0.95);
+            background: none;
             box-shadow: 0 2px 12px rgba(0,0,0,0.04);
             display: flex;
             align-items: center;
@@ -133,7 +133,7 @@
         .book-container {
             width: 100%;
             max-width: 720px;
-            background: #fff;
+            background: none;
             box-shadow: none;
             border-radius: 0;
             margin: 48px 0 48px 0;
@@ -143,7 +143,7 @@
         .book-cover {
             padding: 80px 40px 60px 40px;
             text-align: center;
-            background: #fff;
+            background: none;
             border-bottom: none;
             min-height: 320px;
             display: flex;
@@ -376,7 +376,7 @@
         .book-cover {
             padding: 80px 60px;
             text-align: center;
-            background: linear-gradient(135deg, #f8f6f0 0%, #e8e4d8 100%);
+            background: none;
             border-bottom: 3px double var(--border-color);
             min-height: 400px;
             display: flex;
@@ -530,7 +530,7 @@
         .book-back-matter {
             padding: 40px 60px;
             border-top: 2px solid var(--border-color);
-            background: linear-gradient(180deg, var(--paper-color) 0%, rgba(0,0,0,0.02) 100%);
+            background: none;
         }
 
         .book-back-matter .section-title {
@@ -769,7 +769,30 @@
         body.dark-mode .ipa-text {
             background: rgba(139, 69, 19, 0.2);
         }
-    </style>
+
+/* Force remove all borders and box-shadows for a clean document look */
+.book-container,
+.book-cover,
+.chapter-title,
+.book-front-matter,
+.book-front-matter .section-title,
+.book-back-matter,
+.book-back-matter .section-title,
+.footnotes-section,
+.references-section,
+.page-number,
+.ipa-context-menu {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.toc-book {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+</style>
 </head>
 <body>
     <!-- Top Navigation Bar -->
@@ -1133,7 +1156,7 @@
                 // ===============================
                 function generateBookTOCFromStructure(bookData, isRTL) {
                     if (!bookData) return '';
-                    let toc = `<nav class="toc-book${isRTL ? ' rtl' : ''}"><h3>Table of Contents</h3><ul>`;
+                    let toc = `<nav class="toc-book${isRTL ? ' rtl' : ''}" style="background: none;"><h3>Table of Contents</h3><ul>`;
                     let anchorIdx = 0;
                     // Front Matter
                     if (bookData.frontMatter && Array.isArray(bookData.frontMatter)) {
