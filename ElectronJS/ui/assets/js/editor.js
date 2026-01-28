@@ -2338,10 +2338,26 @@ async function loadBookFromFile(file) {
             book.author = data.author || '';
             book.summary = data.summary || '';
             book.references = data.references || [];
-            book.chapters = data.chapters.map(ch => ({ 
+            // Load front matter
+            book.frontMatter = (data.frontMatter || []).map(s => ({
+                title: s.title || '',
+                content: s.content || '',
+                paragraphs: s.paragraphs || [{ title: 'Paragraph 1', content: s.content || '' }],
+                footnotes: s.footnotes || []
+            }));
+            // Load chapters
+            book.chapters = (data.chapters || []).map(ch => ({ 
                 title: ch.title || '', 
                 content: ch.content || '',
-                paragraphs: ch.paragraphs || [{ title: 'Paragraph 1', content: ch.content || '' }]
+                paragraphs: ch.paragraphs || [{ title: 'Paragraph 1', content: ch.content || '' }],
+                footnotes: ch.footnotes || []
+            }));
+            // Load back matter
+            book.backMatter = (data.backMatter || []).map(s => ({
+                title: s.title || '',
+                content: s.content || '',
+                paragraphs: s.paragraphs || [{ title: 'Paragraph 1', content: s.content || '' }],
+                footnotes: s.footnotes || []
             }));
             book.currentChapter = 0;
             book.currentParagraph = 0;
@@ -2352,9 +2368,19 @@ async function loadBookFromFile(file) {
                 summary: book.summary
             }));
             updateSidebarBookTitle();
+            renderFrontMatter();
             renderChapters();
+            renderBackMatter();
             renderReferences();
-            selectChapter(0, 0);
+            renderFootnotes();
+            // Default to first chapter or section
+            if (book.frontMatter.length > 0) {
+                selectFrontMatterSection(0);
+            } else if (book.chapters.length > 0) {
+                selectChapter(0, 0);
+            } else if (book.backMatter.length > 0) {
+                selectBackMatterSection(0);
+            }
             autosaveBook();
         } catch (err) {
             alert('Failed to load book: ' + err.message);
