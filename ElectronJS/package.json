@@ -1,0 +1,37 @@
+{
+  "name": "flask-electron-app",
+  "version": "1.0.0",
+  "description": "Electron desktop app for Flask backend using existing UI files.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.6.0"
+  },
+  "build": {
+    "appId": "com.girminteck.app",
+    "productName": "GirminTeck",
+    "files": [
+      "main.js",
+      "package.json",
+      "dist/app.exe",
+      "ui/**",
+      "dictionaries/**",
+      "tools/**",
+      "uploads/**",
+      "dictionaries.db"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/app.exe",
+        "to": "app.exe"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

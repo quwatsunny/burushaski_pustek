@@ -1,0 +1,21 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.girminteck.app
+productName: GirminTeck
+files:
+  - filter:
+      - main.js
+      - package.json
+      - dist/app.exe
+      - ui/**
+      - dictionaries/**
+      - tools/**
+      - uploads/**
+      - dictionaries.db
+extraResources:
+  - from: dist/app.exe
+    to: app.exe
+win:
+  target: nsis
+electronVersion: 30.5.1
