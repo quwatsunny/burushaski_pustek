@@ -17,24 +17,7 @@ function exportToPdf() {
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
-    if (window.pywebview && window.pywebview.api && window.pywebview.api.export_pdf) {
-        html2pdf().from(editorContainer).set(opt).outputPdf('blob').then(function(pdfBlob) {
-            const reader = new FileReader();
-            reader.onloadend = function() {
-                window.pywebview.api.export_pdf(bookTitle, reader.result)
-                    .then(res => {
-                        if (res && res.success) {
-                            alert('PDF exported successfully!');
-                        } else {
-                            alert('PDF export failed: ' + (res && res.error ? res.error : 'Unknown error'));
-                        }
-                    });
-            };
-            reader.readAsDataURL(pdfBlob);
-        });
-    } else {
-        html2pdf().from(editorContainer).set(opt).save();
-    }
+    html2pdf().from(editorContainer).set(opt).save();
 }
 // ===============================
 // TABLE OF CONTENTS (TOC)
@@ -159,34 +142,7 @@ let dictionary = [];
 let currentDialect = '';
 let editor, ghostText, dialectSelect, wordCount, suggestionsList;
 let selectedSuggestionIndex = -1;
-let pywebviewReady = false;
-
-// ========================================
-// PYWEBVIEW INITIALIZATION
-// ========================================
-
-// Listen for PyWebView ready event
-window.addEventListener('pywebviewready', function() {
-    pywebviewReady = true;
-    initEditor();
-});
-
-// Fallback: Check for PyWebView API availability
-let checkAttempts = 0;
-const checkInterval = setInterval(() => {
-    checkAttempts++;
-    
-    if (window.pywebview?.api && !pywebviewReady) {
-        clearInterval(checkInterval);
-        pywebviewReady = true;
-        initEditor();
-    }
-    
-    if (checkAttempts >= APP_CONFIG.API_CHECK_MAX_ATTEMPTS) {
-        clearInterval(checkInterval);
-        initEditor();
-    }
-}, APP_CONFIG.API_CHECK_INTERVAL);
+// ...existing code...
 
 // DOM ready fallback
 if (document.readyState === 'loading') {
@@ -201,68 +157,57 @@ if (document.readyState === 'loading') {
  * Initialize the main editor and all components
  */
 function initEditor() {
-    if (pywebviewReady) {
-        clearInterval(checkInterval);
-    }
 
     // Get DOM elements
     editor = document.getElementById('richEditor') || document.getElementById('editor');
     ghostText = document.getElementById('ghostText');
     dialectSelect = document.getElementById('dialectSelect');
-    // Dynamically populate language/dictionary options
-    if (dialectSelect && window.pywebview && window.pywebview.api && window.pywebview.api.list_dictionaries) {
+    // Setup toolbar events
+    setupRichTextToolbar();
+    // Dynamically populate language/dictionary options using fetch
+    if (dialectSelect) {
         // Clear previous options except the first (placeholder)
         while (dialectSelect.options.length > 1) {
             dialectSelect.remove(1);
         }
-        window.pywebview.api.list_dictionaries().then(dicts => {
-            let selectedIdx = 0;
-            let browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-            let enabledDicts = dicts.filter(d => d.enabled !== false);
-            enabledDicts.forEach((d, idx) => {
-                let label = d.language;
-                if (d.script) label += ' [' + d.script + ']';
-                if (d.region) label += ' (' + d.region + ')';
-                else if (d.code) label += ' (' + d.code + ')';
-                const opt = document.createElement('option');
-                opt.value = d.filename.replace('.json','');
-                opt.textContent = label;
-                // Auto-select if only one dictionary or language matches browser
-                if (enabledDicts.length === 1 || (d.language && d.language.toLowerCase() === browserLang)) {
-                    selectedIdx = idx + 1; // +1 for placeholder
+        fetch('/api/dictionaries')
+            .then(r => r.json())
+            .then(dicts => {
+                let selectedIdx = 0;
+                let browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+                let enabledDicts = dicts.filter(d => d.enabled !== false);
+                enabledDicts.forEach((d, idx) => {
+                    let label = d.language;
+                    if (d.script) label += ' [' + d.script + ']';
+                    if (d.region) label += ' (' + d.region + ')';
+                    else if (d.code) label += ' (' + d.code + ')';
+                    const opt = document.createElement('option');
+                    opt.value = d.filename.replace('.json','');
+                    opt.textContent = label;
+                    // Auto-select if only one dictionary or language matches browser
+                    if (enabledDicts.length === 1 || (d.language && d.language.toLowerCase() === browserLang)) {
+                        selectedIdx = idx + 1; // +1 for placeholder
+                    }
+                    dialectSelect.appendChild(opt);
+                });
+                if (selectedIdx > 0) {
+                    dialectSelect.selectedIndex = selectedIdx;
+                    dialectSelect.dispatchEvent(new Event('change'));
                 }
-                dialectSelect.appendChild(opt);
             });
-            if (selectedIdx > 0) {
-                dialectSelect.selectedIndex = selectedIdx;
-                dialectSelect.dispatchEvent(new Event('change'));
-            }
-        });
     }
     wordCount = document.getElementById('wordCount');
     suggestionsList = document.getElementById('suggestionsList');
 
-    // Inject fallback API for browser testing
-    if (!window.pywebview) {
-        window.pywebview = {
-            api: {
-                load_dictionary: (dialect) => {
-                    return fetch(`../dictionaries/${dialect}.json`).then(r => r.json());
-                }
-            }
-        };
-        pywebviewReady = true;
-    }
-    
+    // ...existing code...
+
     if (!editor || !ghostText || !suggestionsList) {
         console.error('Missing required DOM elements');
         return;
     }
 
-    // Set up event listeners
-    editor.addEventListener('input', onEditorInput);
-    editor.addEventListener('keydown', handleEditorKeydown);
-    editor.addEventListener('scroll', updateGhostPosition);
+    // Set up event listeners for rich text autocomplete
+    setupRichTextDictionaryIntegration();
 
     // Clean pasted content, preserving only allowed formatting
     editor.addEventListener('paste', function(e) {
@@ -344,35 +289,14 @@ function loadDictionary() {
         return;
     }
     
-    if (!window.pywebview || !window.pywebview.api) {
-        if (wordCount) wordCount.textContent = 'Initializing...';
-        setTimeout(loadDictionary, 200);
-        return;
-    }
-    
-    if (typeof window.pywebview.api.load_dictionary !== 'function') {
-        if (wordCount) wordCount.textContent = 'Error';
-        return;
-    }
-    
     currentDialect = dialect;
     if (wordCount) wordCount.textContent = 'Loading...';
-    
-    try {
-        const result = window.pywebview.api.load_dictionary(dialect);
-        
-        if (result instanceof Promise) {
-            result
-                .then(handleDictionaryLoaded)
-                .catch(err => {
-                    wordCount.textContent = 'Load failed';
-                });
-        } else {
-            handleDictionaryLoaded(result);
-        }
-    } catch (err) {
-        if (wordCount) wordCount.textContent = 'Error';
-    }
+    fetch(`/dictionaries/${dialect}.json`)
+        .then(r => r.json())
+        .then(handleDictionaryLoaded)
+        .catch(err => {
+            if (wordCount) wordCount.textContent = 'Load failed';
+        });
 }
 
 /**
@@ -380,12 +304,21 @@ function loadDictionary() {
  * @param {Array} words - Array of dictionary words
  */
 function handleDictionaryLoaded(words) {
-    if (Array.isArray(words)) {
+    if (words && Array.isArray(words.words)) {
+        dictionary = words.words;
+        if (wordCount) wordCount.textContent = '';
+    } else if (Array.isArray(words)) {
         dictionary = words;
         if (wordCount) wordCount.textContent = '';
     } else {
         dictionary = [];
         if (wordCount) wordCount.textContent = 'Error';
+    }
+    // Trigger autocomplete update after dictionary loads
+    if (typeof updateGhostText === 'function') updateGhostText();
+    if (typeof showSuggestions === 'function') {
+        const prefix = getCurrentWord();
+        showSuggestions(prefix);
     }
 }
 
@@ -398,12 +331,13 @@ function handleDictionaryLoaded(words) {
  * @returns {string} Current word at cursor
  */
 function getCurrentWord() {
-    const textarea = editor;
+    const textarea = editor || document.getElementById('richEditor');
+    if (!textarea || typeof textarea.value !== 'string' || typeof textarea.selectionStart !== 'number') return '';
     const text = textarea.value.substring(0, textarea.selectionStart);
     const lines = text.split('\n');
     const currentLine = lines[lines.length - 1];
     const words = currentLine.split(/[\s\-\.\,\!\?\;]+/);
-    return words[words.length - 1].toLowerCase();
+    return words[words.length - 1] ? words[words.length - 1].toLowerCase() : '';
 }
 
 /**
@@ -1178,41 +1112,10 @@ function updateGhostTextRich() {
     sel.addRange(range);
 }
 
-/**
- * Clear ghost text from rich editor
- */
 function clearGhostTextRich() {
     const richEditor = document.getElementById('richEditor');
     const oldGhost = richEditor.querySelector('.ghost-inline-suggestion');
     if (oldGhost) oldGhost.remove();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupRichTextDictionaryIntegration);
-} else {
-    setupRichTextDictionaryIntegration();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupRichTextToolbar);
-} else {
-    setupRichTextToolbar();
-}
-
-/**
- * Auto-load default dialect on startup
- */
-function autoLoadDefaultDialect() {
-    const dialectSelect = document.getElementById('dialectSelect');
-    if (!dialectSelect || dialectSelect.value) {
-        loadDictionary();
-    }
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', autoLoadDefaultDialect);
-} else {
-    autoLoadDefaultDialect();
 }
 
 // ========================================
@@ -2341,41 +2244,7 @@ async function saveBookToFile() {
         window.localStorage.setItem('girmin_current_file_name', fileName);
     }
 
-    // If running in pywebview, check for file name and prompt if missing
-    console.log('[DEBUG] saveBookToFile called');
-    console.log('[DEBUG] currentFileName:', currentFileName);
-    console.log('[DEBUG] fileName:', fileName);
-    if (typeof window.pywebview !== 'undefined' && window.pywebview.api) {
-        // If no file name, prompt the user for a file name
-        if (!currentFileName) {
-            let userFileName = prompt('Enter a file name to save (e.g., MyBook.json):', fileName);
-            console.log('[DEBUG] userFileName from prompt:', userFileName);
-            if (!userFileName) {
-                alert('Save cancelled. No file name provided.');
-                return;
-            }
-            // Ensure .json extension
-            if (!userFileName.endsWith('.json')) {
-                userFileName += '.json';
-            }
-            currentFileName = userFileName;
-        }
-        try {
-            console.log('[DEBUG] About to call pywebview.api.save_file with:', currentFileName);
-            await window.pywebview.api.save_file(currentFileName, bookData);
-            // Persist file name in localStorage
-            if (window.localStorage) {
-                window.localStorage.setItem('girmin_current_file_name', currentFileName);
-            }
-            hasUnsavedChanges = false;
-            updateUnsavedIndicator();
-            alert('Your document is saved.');
-            console.log('[DEBUG] Save successful');
-        } catch (err) {
-            console.error('[DEBUG] Save failed:', err);
-            alert('Failed to save: ' + err.message);
-        }
-    } else if (window.showSaveFilePicker) {
+    if (window.showSaveFilePicker) {
         try {
             // If no file handle, prompt user to pick save location
             if (!currentFileHandle) {
@@ -2452,23 +2321,8 @@ async function loadBookFromFile(file) {
             return;
         }
     }
-    // If running in pywebview and file is provided, set currentFileName to full path if available
-    if (typeof window.pywebview !== 'undefined' && file) {
-        // Log all properties of file for debugging
-        console.log('[DEBUG] pywebview file object:', file);
-        if (file.path) {
-            currentFileName = file.path;
-            console.log('[DEBUG] Set currentFileName from file.path:', currentFileName);
-        } else {
-            currentFileName = file.name;
-            console.log('[DEBUG] Set currentFileName from file.name:', currentFileName);
-        }
-        if (window.localStorage) {
-            window.localStorage.setItem('girmin_current_file_name', currentFileName);
-        }
-    } else if (file) {
+    if (file) {
         currentFileName = file.name;
-        console.log('[DEBUG] Set currentFileName from file.name (non-pywebview):', currentFileName);
         // Persist file name in localStorage
         if (window.localStorage) {
             window.localStorage.setItem('girmin_current_file_name', currentFileName);
@@ -3370,12 +3224,7 @@ function blobToBase64(blob) {
     });
 }
 
-/**
- * Check if running inside pywebview app
- */
-function isRunningInPywebview() {
-    return typeof window.pywebview !== 'undefined' && window.pywebview.api;
-}
+
 
 /**
  * Parse inline formatting from an HTML element and return TextRun array
@@ -3542,33 +3391,16 @@ async function exportToWord() {
         const blob = await Packer.toBlob(doc);
         const filename = `${bookTitle.replace(/[^a-z0-9]/gi, '_')}.docx`;
         
-        // Check if running in pywebview app
-        if (isRunningInPywebview()) {
-            // Use pywebview API for file save dialog
-            const base64Data = await blobToBase64(blob);
-            const result = await window.pywebview.api.save_export_file(filename, base64Data, 'docx');
-            
-            if (result.error) {
-                if (result.error !== 'Export cancelled by user') {
-                    alert('Export failed: ' + result.error);
-                }
-                return;
-            }
-            
-            alert('Word document saved to:\n' + result.path);
-            console.log('Word export successful:', result.path);
-        } else {
-            // Browser fallback: use download link
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            console.log('Word export successful (browser mode)');
-        }
+        // Browser fallback: use download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        console.log('Word export successful (browser mode)');
         
     } catch (err) {
         console.error('Word export error:', err);
@@ -3980,16 +3812,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     createIPAMenu();
-    document.getElementById('ipaConvertBtn').onclick = function() {
-        const sel = window.getSelection();
-        if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
-            const range = sel.getRangeAt(0);
-            const text = sel.toString();
-            const ipa = convertToIPA(text);
-            range.deleteContents();
-            range.insertNode(document.createTextNode(ipa));
-            sel.removeAllRanges();
-            hideIPAMenu();
-        }
-    };
 });

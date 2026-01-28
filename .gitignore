@@ -1,0 +1,10 @@
+__pycache__/
+build/
+*.pyc
+*.pyo
+*.pyd
+*.spec
+uploads/
+*.log
+.env
+node_modules/

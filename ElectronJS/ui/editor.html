@@ -226,19 +226,8 @@
     <script>
     // Focus fade effect for the whole interface
     const body = document.body;
-    var editor = document.getElementById('richEditor');
-    function updateFocusFade() {
-        if (document.activeElement === editor) {
-            body.classList.add('focus-fade-active');
-            body.classList.remove('focus-fade');
-        } else {
-            body.classList.add('focus-fade');
-            body.classList.remove('focus-fade-active');
-        }
-    }
-    editor.addEventListener('focus', updateFocusFade);
-    editor.addEventListener('blur', updateFocusFade);
-    window.addEventListener('DOMContentLoaded', updateFocusFade);
+    // Removed duplicate editor variable declaration; handled in editor.js
+    // Disabled focus-fade overlay to prevent editor from being unclickable
     </script>
 </body>
 </html>

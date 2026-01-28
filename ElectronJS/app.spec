@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('ui', 'ui'), ('dictionaries', 'dictionaries'), ('tools', 'tools'), ('uploads', 'uploads'), ('dictionaries.db', 'dictionaries.db')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

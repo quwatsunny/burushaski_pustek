@@ -1,3 +1,33 @@
+# Toggle enable/disable state for a dictionary
+def toggle_dictionary(filename):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('SELECT enabled FROM dictionaries WHERE filename = ?', (filename,))
+    row = c.fetchone()
+    if row is not None:
+        new_state = 0 if row[0] else 1
+        c.execute('UPDATE dictionaries SET enabled = ? WHERE filename = ?', (new_state, filename))
+        conn.commit()
+        conn.close()
+        return bool(new_state)
+    conn.close()
+    return None
+
+# Delete a dictionary record and (optionally) the file
+def delete_dictionary(filename):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('DELETE FROM dictionaries WHERE filename = ?', (filename,))
+    conn.commit()
+    conn.close()
+    # Optionally, delete the file from disk
+    dict_path = os.path.join(os.path.dirname(BASE_DIR), 'dictionaries', filename)
+    if os.path.exists(dict_path):
+        try:
+            os.remove(dict_path)
+        except Exception:
+            pass
+    return True
 import sqlite3
 import os
 
@@ -27,7 +57,7 @@ def add_dictionary(language, code, region, script, filename, enabled=True):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        INSERT OR IGNORE INTO dictionaries (language, code, region, script, filename, enabled)
+        INSERT OR REPLACE INTO dictionaries (language, code, region, script, filename, enabled)
         VALUES (?, ?, ?, ?, ?, ?)
     ''', (language, code, region, script, filename, int(enabled)))
     conn.commit()
