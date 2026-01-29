@@ -837,45 +837,87 @@ function setupRichTextToolbar() {
 
     toolbar.addEventListener('click', function(e) {
         const btn = e.target.closest('.toolbar-btn');
-        if (btn) {
-            const cmd = btn.dataset.cmd;
-            if (cmd) {
-                document.execCommand(cmd, false, null);
-                richEditor.focus();
+        if (!btn) return;
+        const cmd = btn.dataset.cmd;
+        if (cmd) {
+            richEditor.focus();
+            applyRichTextCommand(cmd);
+        }
+        // Handle footnote button
+        if (btn.id === 'insertFootnoteBtn') {
+            insertFootnote();
+        }
+        // Handle citation button
+        if (btn.id === 'insertCitationBtn') {
+            if (!book.references || book.references.length === 0) {
+                alert('No references added yet. Add a reference first using the References panel in the sidebar.');
+                return;
             }
-            // Handle footnote button
-            if (btn.id === 'insertFootnoteBtn') {
-                insertFootnote();
+            const refNum = prompt(`Enter reference number (1-${book.references.length}):`);
+            const idx = parseInt(refNum, 10) - 1;
+            if (isNaN(idx) || idx < 0 || idx >= book.references.length) {
+                alert('Invalid reference number.');
+                return;
             }
-            // Handle citation button
-            if (btn.id === 'insertCitationBtn') {
-                if (!book.references || book.references.length === 0) {
-                    alert('No references added yet. Add a reference first using the References panel in the sidebar.');
-                    return;
+            insertCitationAtCursor(idx);
+        }
+        // Handle IPA conversion button
+        if (btn.id === 'ipaConvertToolbarBtn') {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const selectedText = selection.toString();
+                if (selectedText.length > 0) {
+                    const ipa = convertToIPA(selectedText);
+                    // Replace selected text with IPA
+                    document.execCommand('insertText', false, ipa);
                 }
-                const refNum = prompt(`Enter reference number (1-${book.references.length}):`);
-                const idx = parseInt(refNum, 10) - 1;
-                if (isNaN(idx) || idx < 0 || idx >= book.references.length) {
-                    alert('Invalid reference number.');
-                    return;
-                }
-                insertCitationAtCursor(idx);
             }
-            // Handle IPA conversion button
-            if (btn.id === 'ipaConvertToolbarBtn') {
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const selectedText = selection.toString();
-                    if (selectedText.length > 0) {
-                        const ipa = convertToIPA(selectedText);
-                        // Use execCommand for undo support
-                        document.execCommand('insertText', false, ipa);
-                    }
-                }
-                richEditor.focus();
-            }
+            richEditor.focus();
         }
     });
+
+    // Cross-browser rich text formatting handler
+    function applyRichTextCommand(cmd) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer)) return;
+        let tag;
+        switch (cmd) {
+            case 'bold': tag = 'b'; break;
+            case 'italic': tag = 'i'; break;
+            case 'underline': tag = 'u'; break;
+            case 'strikeThrough': tag = 's'; break;
+            case 'insertUnorderedList': tag = 'ul'; break;
+            case 'insertOrderedList': tag = 'ol'; break;
+            default: tag = null;
+        }
+        if (tag === 'ul' || tag === 'ol') {
+            // List: wrap block in <ul> or <ol> and <li>
+            let block = range.startContainer;
+            while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI)$/i.test(block.nodeName)) {
+                block = block.parentNode;
+            }
+            if (block && block !== richEditor) {
+                const list = document.createElement(tag);
+                const li = document.createElement('li');
+                li.innerHTML = block.innerHTML;
+                list.appendChild(li);
+                block.parentNode.replaceChild(list, block);
+            }
+        } else if (tag) {
+            // Inline: wrap selection in tag
+            if (range.collapsed) return;
+            const el = document.createElement(tag);
+            el.appendChild(range.extractContents());
+            range.insertNode(el);
+            // Move caret after
+            range.setStartAfter(el);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
 
     // Text color
     colorInput.addEventListener('input', function() {
@@ -892,12 +934,54 @@ function setupRichTextToolbar() {
     // Heading select
     headingSelect.addEventListener('change', function() {
         const value = headingSelect.value;
-        if (value) {
-            document.execCommand('formatBlock', false, value);
-        } else {
-            document.execCommand('formatBlock', false, 'P');
-        }
         richEditor.focus();
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        if (!richEditor.contains(range.commonAncestorContainer)) return;
+        // Remove existing heading if present
+        let block = range.startContainer;
+        while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3)$/i.test(block.nodeName)) {
+            block = block.parentNode;
+        }
+        if (block && /^(H1|H2|H3)$/i.test(block.nodeName)) {
+            // Replace heading with <p>
+            const p = document.createElement('p');
+            p.innerHTML = block.innerHTML;
+            block.parentNode.replaceChild(p, block);
+            block = p;
+        }
+        if (value && value.match(/^H[1-6]$/i)) {
+            // Apply heading to block or selection
+            let targetBlock = block;
+            if (!targetBlock || targetBlock === richEditor) {
+                // No block found, wrap selection or caret line
+                if (range.collapsed) {
+                    // Insert heading at caret
+                    const heading = document.createElement(value);
+                    heading.innerHTML = '<br>';
+                    range.insertNode(heading);
+                    range.setStart(heading, 0);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    // Wrap selected text in heading
+                    const heading = document.createElement(value);
+                    heading.appendChild(range.extractContents());
+                    range.insertNode(heading);
+                    range.setStartAfter(heading);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            } else {
+                // Replace block with heading
+                const heading = document.createElement(value);
+                heading.innerHTML = targetBlock.innerHTML;
+                targetBlock.parentNode.replaceChild(heading, targetBlock);
+            }
+        }
         headingSelect.value = '';
     });
 
