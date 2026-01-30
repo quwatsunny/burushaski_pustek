@@ -995,6 +995,9 @@ function setupRichTextToolbar() {
         if (!richEditor.contains(range.commonAncestorContainer)) return;
         // Remove existing heading if present
         let block = range.startContainer;
+        while (block && block !== richEditor && block.nodeType !== 1) {
+            block = block.parentNode;
+        }
         while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3)$/i.test(block.nodeName)) {
             block = block.parentNode;
         }
@@ -1008,7 +1011,7 @@ function setupRichTextToolbar() {
         if (value && value.match(/^H[1-6]$/i)) {
             // Apply heading to block or selection
             let targetBlock = block;
-            if (!targetBlock || targetBlock === richEditor) {
+            if (!targetBlock || targetBlock === richEditor || targetBlock.nodeType !== 1) {
                 // No block found, wrap selection or caret line
                 if (range.collapsed) {
                     // Insert heading at caret
@@ -1268,9 +1271,7 @@ let book = {
     author: '',
     summary: '',
     frontMatter: [],  // Foreword, Preface, Acknowledgements, Dedication, etc.
-    chapters: [
-        { title: 'Chapter 1', paragraphs: [{ title: 'Paragraph 1', content: '' }], footnotes: [] }
-    ],
+    chapters: [],
     backMatter: [],   // Glossary, Appendix, Bibliography, Index, About the Author, etc.
     references: [],
     currentChapter: 0,
@@ -2533,7 +2534,7 @@ function newBook() {
     book.author = '';
     book.summary = '';
     book.references = [];
-    book.chapters = [{ title: 'Chapter 1', paragraphs: [{ title: 'Paragraph 1', content: '' }] }];
+    book.chapters = [];
     book.currentChapter = 0;
     book.currentParagraph = 0;
     
