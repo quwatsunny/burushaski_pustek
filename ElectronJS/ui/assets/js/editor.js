@@ -5,7 +5,7 @@ function exportToPdf() {
     const editorContainer = document.getElementById('richEditor');
     if (!editorContainer || !editorContainer.innerHTML.trim()) {
         alert('No content to export. Please write something first.');
-        return;
+        return; 
     }
     // Get book title for filename
     const titleEl = document.getElementById('sidebarBookTitle');
@@ -879,9 +879,15 @@ function setupRichTextToolbar() {
     // Cross-browser rich text formatting handler
     function applyRichTextCommand(cmd) {
         const sel = window.getSelection();
-        if (!sel.rangeCount) return;
+        if (!sel.rangeCount) {
+            console.log('No selection range');
+            return;
+        }
         const range = sel.getRangeAt(0);
-        if (!richEditor.contains(range.commonAncestorContainer)) return;
+        if (!richEditor.contains(range.commonAncestorContainer)) {
+            console.log('Selection not in editor');
+            return;
+        }
         let tag;
         switch (cmd) {
             case 'bold': tag = 'b'; break;
@@ -890,7 +896,43 @@ function setupRichTextToolbar() {
             case 'strikeThrough': tag = 's'; break;
             case 'insertUnorderedList': tag = 'ul'; break;
             case 'insertOrderedList': tag = 'ol'; break;
+            case 'justifyLeft': tag = 'left'; break;
+            case 'justifyCenter': tag = 'center'; break;
+            case 'justifyRight': tag = 'right'; break;
             default: tag = null;
+        }
+        if (tag === 'left' || tag === 'center' || tag === 'right') {
+            let block = range.startContainer;
+            console.log('Alignment command:', cmd, 'block:', block);
+            // Traverse up to find a block element
+            while (block && block !== richEditor && block.nodeType !== 1) {
+                block = block.parentNode;
+            }
+            while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3|H4|H5|H6)$/i.test(block.nodeName)) {
+                block = block.parentNode;
+            }
+            console.log('Resolved block for alignment:', block);
+            if (block && block !== richEditor && block.nodeType === 1) {
+                block.style.textAlign = tag;
+                console.log('Set textAlign', tag, 'on', block);
+            } else if (range && !range.collapsed) {
+                // Wrap selection in a <p> and set alignment
+                const p = document.createElement('p');
+                p.style.textAlign = tag;
+                p.appendChild(range.extractContents());
+                range.insertNode(p);
+                // Move caret after
+                range.setStartAfter(p);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                console.log('Wrapped selection in <p> and set textAlign', tag);
+            } else {
+                // If no block found, set on editor
+                richEditor.style.textAlign = tag;
+                console.log('Set textAlign', tag, 'on editor');
+            }
+            return;
         }
         if (tag === 'ul' || tag === 'ol') {
             // List: wrap block in <ul> or <ol> and <li>
@@ -904,6 +946,18 @@ function setupRichTextToolbar() {
                 li.innerHTML = block.innerHTML;
                 list.appendChild(li);
                 block.parentNode.replaceChild(list, block);
+            }
+        } else if (tag === 'left' || tag === 'center' || tag === 'right') {
+            // Alignment: set text-align on block
+            let block = range.startContainer;
+            while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3|H4|H5|H6)$/i.test(block.nodeName)) {
+                block = block.parentNode;
+            }
+            if (block && block !== richEditor) {
+                block.style.textAlign = tag;
+            } else {
+                // If no block found, set on editor
+                richEditor.style.textAlign = tag;
             }
         } else if (tag) {
             // Inline: wrap selection in tag
