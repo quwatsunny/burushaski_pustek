@@ -987,17 +987,25 @@ function setupRichTextToolbar() {
 
     // Heading select
     headingSelect.addEventListener('change', function() {
-        const value = headingSelect.value;
+        let value = headingSelect.value;
+        // Defensive: if value is undefined or not a valid option, reset to ''
+        if (typeof value === 'undefined' || !value.match(/^$|^H[1-6]$/i)) {
+            value = '';
+            headingSelect.value = '';
+        }
         richEditor.focus();
         const sel = window.getSelection();
-        if (!sel.rangeCount) return;
+        if (!sel.rangeCount) {
+            headingSelect.value = '';
+            return;
+        }
         const range = sel.getRangeAt(0);
-        if (!richEditor.contains(range.commonAncestorContainer)) return;
+        if (!richEditor.contains(range.commonAncestorContainer)) {
+            headingSelect.value = '';
+            return;
+        }
         // Remove existing heading if present
         let block = range.startContainer;
-        while (block && block !== richEditor && block.nodeType !== 1) {
-            block = block.parentNode;
-        }
         while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3)$/i.test(block.nodeName)) {
             block = block.parentNode;
         }
@@ -1011,7 +1019,7 @@ function setupRichTextToolbar() {
         if (value && value.match(/^H[1-6]$/i)) {
             // Apply heading to block or selection
             let targetBlock = block;
-            if (!targetBlock || targetBlock === richEditor || targetBlock.nodeType !== 1) {
+            if (!targetBlock || targetBlock === richEditor) {
                 // No block found, wrap selection or caret line
                 if (range.collapsed) {
                     // Insert heading at caret
@@ -1039,7 +1047,8 @@ function setupRichTextToolbar() {
                 targetBlock.parentNode.replaceChild(heading, targetBlock);
             }
         }
-        headingSelect.value = '';
+        // Always reset to paragraph after applying
+        setTimeout(() => { headingSelect.value = ''; }, 0);
     });
 
     // Font select
@@ -1271,7 +1280,7 @@ let book = {
     author: '',
     summary: '',
     frontMatter: [],  // Foreword, Preface, Acknowledgements, Dedication, etc.
-    chapters: [],
+    chapters: [], // No default chapter or paragraph
     backMatter: [],   // Glossary, Appendix, Bibliography, Index, About the Author, etc.
     references: [],
     currentChapter: 0,
@@ -1370,7 +1379,7 @@ function tryRestoreAutosave() {
                 book.chapters = parsed.chapters.map(ch => ({ 
                     title: ch.title || '', 
                     content: ch.content || '',
-                    paragraphs: ch.paragraphs || [{ title: 'Paragraph 1', content: ch.content || '' }],
+                    paragraphs: Array.isArray(ch.paragraphs) ? ch.paragraphs : [],
                     footnotes: ch.footnotes || []
                 }));
                 book.currentChapter = parsed.currentChapter || 0;

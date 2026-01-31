@@ -72,8 +72,8 @@ function createWindow() {
 
 app.whenReady().then(() => {
   startBackend();
-  // Wait a moment for backend to start
-  setTimeout(createWindow, 2000);
+  // Wait longer for backend to start (5 seconds)
+  setTimeout(createWindow, 5000);
 });
 
 

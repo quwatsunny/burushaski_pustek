@@ -1,16 +1,21 @@
 
 import os
+import sys
 import json
 from flask import Flask, jsonify, request, send_from_directory, abort
 from tools.dict_db import init_db, add_dictionary, list_dictionaries as db_list_dictionaries, toggle_dictionary, delete_dictionary
 from tools.build_from_csv import build_from_csv
 from tools.build_from_lift import build_from_lift
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+if getattr(sys, 'frozen', False):
+	# Running as bundled by PyInstaller
+	BASE_DIR = sys._MEIPASS
+else:
+	BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DICT_DIR = os.path.join(BASE_DIR, 'dictionaries')
 UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
 UI_DIR = os.path.join(BASE_DIR, 'ui')
 
-app = Flask(__name__, static_folder=UI_DIR, static_url_path='')
+app = Flask(__name__, static_folder=os.path.join(UI_DIR, 'assets'), static_url_path='/assets')
 # Serve dictionary JSON files from the dictionaries folder
 @app.route('/dictionaries/<filename>')
 def serve_dictionary_file(filename):
@@ -175,7 +180,8 @@ def index():
 
 @app.route('/<path:filename>')
 def serve_ui(filename):
-	if os.path.exists(os.path.join(UI_DIR, filename)):
+	file_path = os.path.join(UI_DIR, filename)
+	if os.path.exists(file_path):
 		return send_from_directory(UI_DIR, filename)
 	abort(404)
 
