@@ -18,7 +18,19 @@ function getBackendPath() {
 
 function startBackend() {
   const exePath = getBackendPath();
-  backendProcess = spawn(exePath, [], { stdio: 'ignore', detached: true });
+  try {
+    backendProcess = spawn(exePath, [], { stdio: 'ignore', detached: true });
+    backendProcess.on('error', (err) => {
+      console.error('Failed to start backend:', err);
+    });
+    backendProcess.on('exit', (code, signal) => {
+      if (code !== 0) {
+        console.error(`Backend exited with code ${code} and signal ${signal}`);
+      }
+    });
+  } catch (err) {
+    console.error('Exception while starting backend:', err);
+  }
 }
 
 function stopBackend() {
@@ -32,7 +44,7 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
     height: 800,
-    icon: path.join(__dirname, 'ui', 'assets', 'logo.png'),
+    icon: path.join(__dirname, 'ui', 'assets', 'logo.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
@@ -64,20 +76,21 @@ function createWindow() {
   Menu.setApplicationMenu(menu);
 
   // Ensure the window closes and the backend stops
-  win.on('closed', () => {
+  win.on('close', (e) => {
     stopBackend();
-    app.quit();
   });
 }
 
 app.whenReady().then(() => {
   startBackend();
-  // Wait longer for backend to start (5 seconds)
-  setTimeout(createWindow, 5000);
+  // Wait longer for backend to start (10 seconds)
+  setTimeout(createWindow, 10000);
 });
 
 
+
 app.on('window-all-closed', () => {
+  stopBackend();
   if (process.platform !== 'darwin') {
     app.quit();
   }
