@@ -1,3 +1,20 @@
+const { ipcMain } = require('electron');
+
+ipcMain.on('close-window', () => {
+    if (mainWindow) mainWindow.close();
+});
+ipcMain.on('minimize-window', () => {
+    if (mainWindow) mainWindow.minimize();
+});
+ipcMain.on('maximize-window', () => {
+    if (mainWindow) {
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
+    }
+});
 const { app, BrowserWindow, Menu, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');

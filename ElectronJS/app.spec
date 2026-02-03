@@ -1,13 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
 
+project_dir = os.path.abspath('.')
+
 a = Analysis(
     ['app.py'],
-    pathex=[],
+    pathex=[project_dir],
     binaries=[],
     datas=[
         (os.path.join('ui', ''), 'ui'),
         (os.path.join('dictionaries', ''), 'dictionaries'),
+        # Uncomment if you have these folders:
+        # (os.path.join('templates', ''), 'templates'),
+        # (os.path.join('static', ''), 'static'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -32,7 +37,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=True,  # Set to False for production if you don't want a terminal window
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

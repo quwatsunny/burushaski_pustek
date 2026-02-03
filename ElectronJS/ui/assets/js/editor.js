@@ -1,3 +1,12 @@
+// Example: Add a custom close button handler for Electron
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('electronCloseBtn');
+    if (closeBtn && window.electronAPI && window.electronAPI.closeWindow) {
+        closeBtn.addEventListener('click', () => {
+            window.electronAPI.closeWindow();
+        });
+    }
+});
 // ===============================
 // EXPORT TO PDF (html2pdf)
 // ===============================
