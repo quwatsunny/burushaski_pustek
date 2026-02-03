@@ -31,8 +31,16 @@ def delete_dictionary(filename):
 import sqlite3
 import os
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'dictionaries.db')
+
+# Handle PyInstaller packaged mode
+import sys
+if getattr(sys, 'frozen', False):
+    # If running as a PyInstaller bundle
+    BASE_DIR = sys._MEIPASS
+    DB_PATH = os.path.join(os.path.dirname(sys.executable), 'dictionaries.db')
+else:
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    DB_PATH = os.path.join(BASE_DIR, 'dictionaries.db')
 
 # Initialize the database and create the table if it doesn't exist
 def init_db():

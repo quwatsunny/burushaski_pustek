@@ -45,3 +45,5 @@ This will open the Electron desktop window, loading your Flask app UI.
 git fetch origin
 git reset --hard origin/main
 git clean -xfd
+
+# python -m PyInstaller app.py --distpath dist --onefile

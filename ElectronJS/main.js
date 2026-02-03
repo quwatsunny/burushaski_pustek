@@ -1,108 +1,164 @@
-
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+
+let mainWindow = null;
+let splash = null;
 let backendProcess = null;
 
-
-
-
-function getBackendPath() {
-  // In production, app.exe is in the resources folder
-  if (app.isPackaged) {
-    return path.join(process.resourcesPath, 'app.exe');
-  }
-  // In development, use the PyInstaller build output
-  return path.join(__dirname, 'dist', 'app.exe');
-}
+const isDev = process.env.NODE_ENV === 'development';
+const BACKEND_PORT = 5000;
+const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
+const BACKEND_EXE = isDev ? 'python' : path.join(process.resourcesPath, 'GirminTok.exe');
+const BACKEND_SCRIPT = 'app.py';
 
 function startBackend() {
-  const exePath = getBackendPath();
-  try {
-    backendProcess = spawn(exePath, [], { stdio: 'ignore', detached: true });
-    backendProcess.on('error', (err) => {
-      console.error('Failed to start backend:', err);
-    });
-    backendProcess.on('exit', (code, signal) => {
-      if (code !== 0) {
-        console.error(`Backend exited with code ${code} and signal ${signal}`);
-      }
-    });
-  } catch (err) {
-    console.error('Exception while starting backend:', err);
-  }
+    if (isDev) {
+        backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], {
+            cwd: __dirname,
+            shell: true,
+            stdio: 'ignore',
+            detached: true
+        });
+    } else {
+        backendProcess = spawn(BACKEND_EXE, [], {
+            cwd: process.resourcesPath,
+            shell: true,
+            stdio: 'ignore',
+            detached: true
+        });
+    }
+    if (backendProcess) backendProcess.unref();
 }
 
 function stopBackend() {
-  if (backendProcess) {
-    backendProcess.kill();
-    backendProcess = null;
-  }
+    if (backendProcess) {
+        try {
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/pid', backendProcess.pid, '/f', '/t']);
+            } else {
+                backendProcess.kill();
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
 }
 
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    icon: path.join(__dirname, 'ui', 'assets', 'logo.ico'),
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true
-    }
-  });
-
-  win.loadURL('http://localhost:5000');
-
-  // Create a custom menu with Help > User Guide
-  const menu = Menu.buildFromTemplate([
-    {
-      label: 'File',
-      submenu: [
-        { role: 'quit' }
-      ]
-    },
-    {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'User Guide',
-          click: () => {
-            shell.openExternal('http://localhost:5000/user-guide.html');
-          }
+    mainWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        show: false,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
         }
-      ]
-    }
-  ]);
-  Menu.setApplicationMenu(menu);
+    });
 
-  // Ensure the window closes and the backend stops
-  win.on('close', (e) => {
-    stopBackend();
-  });
+    mainWindow.once('ready-to-show', () => {
+        if (splash) splash.close();
+        mainWindow.show();
+    });
+
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+
+    mainWindow.loadURL(BACKEND_URL);
 }
 
-app.whenReady().then(() => {
-  startBackend();
-  // Wait longer for backend to start (10 seconds)
-  setTimeout(createWindow, 10000);
+function showSplash() {
+    splash = new BrowserWindow({
+        width: 400,
+        height: 300,
+        frame: false,
+        alwaysOnTop: true,
+        transparent: true,
+        resizable: false
+    });
+    splash.loadFile(path.join(__dirname, 'ui', 'welcome.html'));
+}
+
+function waitForFlask(retries = 30) {
+    const http = require('http');
+    const tryConnect = () => {
+        http.get(BACKEND_URL, res => {
+            if (res.statusCode === 200) {
+                createWindow();
+            } else {
+                retry();
+            }
+        }).on('error', retry);
+    };
+    const retry = () => {
+        if (retries > 0) {
+            setTimeout(() => {
+                waitForFlask(retries - 1);
+            }, 500);
+        } else {
+            dialog.showErrorBox('Error', 'Failed to start backend server.');
+            app.quit();
+        }
+    };
+    tryConnect();
+}
+
+function setAppMenu() {
+    const template = [
+        {
+            label: 'File',
+            submenu: [
+                { role: 'quit' }
+            ]
+        },
+        {
+            label: 'Edit',
+            submenu: [
+                { role: 'undo' },
+                { role: 'redo' },
+                { type: 'separator' },
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                { role: 'selectAll' }
+            ]
+        },
+        {
+            label: 'View',
+            submenu: [
+                { role: 'reload' },
+                { role: 'toggledevtools' },
+                { type: 'separator' },
+                { role: 'resetzoom' },
+                { role: 'zoomin' },
+                { role: 'zoomout' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
+            ]
+        }
+    ];
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+}
+
+app.on('ready', () => {
+    showSplash();
+    startBackend();
+    waitForFlask();
+    setAppMenu();
 });
-
-
 
 app.on('window-all-closed', () => {
-  stopBackend();
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        stopBackend();
+        app.quit();
+    }
 });
-
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-
-app.on('will-quit', () => {
-  stopBackend();
+    if (mainWindow === null) {
+        createWindow();
+    }
 });

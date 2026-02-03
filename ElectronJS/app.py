@@ -181,8 +181,12 @@ def index():
 @app.route('/<path:filename>')
 def serve_ui(filename):
 	file_path = os.path.join(UI_DIR, filename)
+	print(f"[DEBUG][REQUEST] Requested: {filename}")
+	print(f"[DEBUG][REQUEST] UI_DIR: {UI_DIR}")
+	print(f"[DEBUG][REQUEST] Resolved path: {file_path} | Exists: {os.path.exists(file_path)}")
 	if os.path.exists(file_path):
 		return send_from_directory(UI_DIR, filename)
+	print(f"[ERROR] File not found: {file_path}")
 	abort(404)
 
 def build_dictionary(file_path, language_name=None, bcp_code=None, script=None, region=None):
@@ -292,8 +296,12 @@ def build_dictionary(file_path, language_name=None, bcp_code=None, script=None, 
 	}
 
 if __name__ == "__main__":
+
+	# Detect if running under Electron (subprocess)
+	import os
+	is_electron = os.environ.get('ELECTRON_RUN') == '1'
 	init_db()
-	app.run(host='0.0.0.0', port=5000, debug=True)
+	app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=not is_electron)
 
 
 

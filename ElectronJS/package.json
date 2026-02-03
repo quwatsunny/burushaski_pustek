@@ -5,20 +5,24 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "pyinstaller": "python -m PyInstaller app.spec --distpath dist",
+    "predist": "npm run pyinstaller",
+    "dist": "npm run pyinstaller && electron-builder"
   },
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.girminteck.app",
-    "productName": "GirminTeck",
+    "appId": "com.girmintok.app",
+    "productName": "GirminTok",
     "files": [
       "main.js",
       "package.json",
-      "dist/app.exe",
+      "dist/GirminTok.exe",
       "ui/**",
+      "ui/assets/**",
+      "ui/css/**",
       "dictionaries/**",
       "tools/**",
       "uploads/**",
@@ -26,8 +30,8 @@
     ],
     "extraResources": [
       {
-        "from": "dist/app.exe",
-        "to": "app.exe"
+        "from": "dist/GirminTok.exe",
+        "to": "GirminTok.exe"
       }
     ],
     "win": {
@@ -36,6 +40,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+  "license": "ISC"
 }

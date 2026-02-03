@@ -1,11 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+import os
 
 a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        (os.path.join('ui', ''), 'ui'),
+        (os.path.join('dictionaries', ''), 'dictionaries'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -22,7 +25,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='app',
+    name='GirminTok',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
