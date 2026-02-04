@@ -139,9 +139,7 @@ function hideTOC() {
 
 
 // Integrate TOC generation with editor initialization
-const oldInitEditor = typeof initEditor === 'function' ? initEditor : null;
 function initEditor() {
-    if (oldInitEditor) oldInitEditor();
     const editor = document.getElementById('richEditor');
     if (editor) {
         editor.addEventListener('input', generateTOC);
@@ -1070,10 +1068,10 @@ function setupRichTextToolbar() {
     // Heading select
     headingSelect.addEventListener('change', function() {
         let value = headingSelect.value;
-        // Defensive: if value is undefined or not a valid option, reset to ''
-        if (typeof value === 'undefined' || !value.match(/^$|^H[1-6]$/i)) {
-            value = '';
+        // Only allow H1, H2, H3 (or extend as needed)
+        if (!/^H[1-6]$/i.test(value)) {
             headingSelect.value = '';
+            return;
         }
         richEditor.focus();
         const sel = window.getSelection();
@@ -1086,51 +1084,58 @@ function setupRichTextToolbar() {
             headingSelect.value = '';
             return;
         }
-        // Remove existing heading if present
-        let block = range.startContainer;
-        while (block && block !== richEditor && block.nodeType === 1 && !/^(P|DIV|LI|H1|H2|H3)$/i.test(block.nodeName)) {
-            block = block.parentNode;
-        }
-        if (block && /^(H1|H2|H3)$/i.test(block.nodeName)) {
-            // Replace heading with <p>
-            const p = document.createElement('p');
-            p.innerHTML = block.innerHTML;
-            block.parentNode.replaceChild(p, block);
-            block = p;
-        }
-        if (value && value.match(/^H[1-6]$/i)) {
-            // Apply heading to block or selection
-            let targetBlock = block;
-            if (!targetBlock || targetBlock === richEditor) {
-                // No block found, wrap selection or caret line
-                if (range.collapsed) {
-                    // Insert heading at caret
-                    const heading = document.createElement(value);
-                    heading.innerHTML = '<br>';
-                    range.insertNode(heading);
-                    range.setStart(heading, 0);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                } else {
-                    // Wrap selected text in heading
-                    const heading = document.createElement(value);
-                    heading.appendChild(range.extractContents());
-                    range.insertNode(heading);
-                    range.setStartAfter(heading);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
-            } else {
-                // Replace block with heading
-                const heading = document.createElement(value);
-                heading.innerHTML = targetBlock.innerHTML;
-                targetBlock.parentNode.replaceChild(heading, targetBlock);
-            }
+        // Only convert selected text to heading, not the whole block
+        if (!range.collapsed) {
+            // Wrap selected text in heading
+            const heading = document.createElement(value);
+            heading.appendChild(range.extractContents());
+            range.insertNode(heading);
+            // Move caret after the heading for normal text
+            range.setStartAfter(heading);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
         // Always reset to paragraph after applying
         setTimeout(() => { headingSelect.value = ''; }, 0);
+    });
+
+    // Intercept Enter in heading: insert normal paragraph after heading
+    richEditor.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+            let node = range.startContainer;
+            // Find if inside a heading
+            while (node && node !== richEditor && node.nodeType !== 1) node = node.parentNode;
+            while (node && node !== richEditor && node.nodeType === 1 && !/^(H1|H2|H3|H4|H5|H6)$/i.test(node.nodeName)) {
+                node = node.parentNode;
+            }
+            if (node && /^(H1|H2|H3|H4|H5|H6)$/i.test(node.nodeName)) {
+                // Only split if at end of heading
+                const tempRange = range.cloneRange();
+                tempRange.selectNodeContents(node);
+                tempRange.collapse(false);
+                if (range.compareBoundaryPoints(Range.END_TO_END, tempRange) === 0) {
+                    e.preventDefault();
+                    // Insert a new <p> after heading
+                    const p = document.createElement('p');
+                    p.appendChild(document.createElement('br'));
+                    if (node.nextSibling) {
+                        node.parentNode.insertBefore(p, node.nextSibling);
+                    } else {
+                        node.parentNode.appendChild(p);
+                    }
+                    // Place caret in new paragraph
+                    const newRange = document.createRange();
+                    newRange.setStart(p, 0);
+                    newRange.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                }
+            }
+        }
     });
 
     // Font select
