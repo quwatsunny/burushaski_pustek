@@ -27,10 +27,13 @@ let mainWindow = null;
 let windowCreated = false;
 let backendProcess = null;
 
-const isDev = true; // Force development mode for local testing
+
+// Set to true for development, false for production/release
+const isDev = process.env.NODE_ENV === 'development' || process.env.ELECTRON_IS_DEV === '1';
 const BACKEND_PORT = 5000;
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
-const BACKEND_EXE = isDev ? 'python' : path.resolve(__dirname, 'dist', 'win-unpacked', 'GirminTok.exe');
+// In production, girmintok.exe should be in resources/app or resources/ depending on packager
+const BACKEND_EXE = isDev ? 'python' : path.join(process.resourcesPath, 'girmintok.exe');
 const BACKEND_SCRIPT = 'app.py';
 
 function startBackend() {
@@ -49,6 +52,7 @@ function startBackend() {
         };
         backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], spawnOpts);
     } else {
+        // In production, girmintok.exe is in resourcesPath
         spawnOpts = {
             cwd: process.resourcesPath,
             shell: true,

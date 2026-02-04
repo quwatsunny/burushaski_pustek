@@ -18,6 +18,7 @@
     "productName": "GirminTok",
     "files": [
       "main.js",
+      "preload.js",
       "package.json",
       "dist/GirminTok.exe",
       "ui/**",
