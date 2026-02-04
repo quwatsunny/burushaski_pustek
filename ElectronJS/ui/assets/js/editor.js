@@ -1,9 +1,82 @@
 // Example: Add a custom close button handler for Electron
+// ========================================
+// INPUT MODAL (REPLACES PROMPT)
+// ========================================
+function showInputModal(label, defaultValue = '', callback) {
+    const modal = document.getElementById('inputModal');
+    const labelEl = document.getElementById('inputModalLabel');
+    const field = document.getElementById('inputModalField');
+    const okBtn = document.getElementById('inputModalOk');
+    const cancelBtn = document.getElementById('inputModalCancel');
+    modal.style.display = 'flex';
+    labelEl.textContent = label;
+    field.value = defaultValue;
+    field.focus();
+    function close(result) {
+        modal.style.display = 'none';
+        okBtn.onclick = null;
+        cancelBtn.onclick = null;
+        field.onkeydown = null;
+        callback(result);
+    }
+    okBtn.onclick = () => close(field.value.trim());
+    cancelBtn.onclick = () => close(null);
+    field.onkeydown = (e) => {
+        if (e.key === 'Enter') okBtn.click();
+        if (e.key === 'Escape') cancelBtn.click();
+    };
+}
 document.addEventListener('DOMContentLoaded', function() {
     const closeBtn = document.getElementById('electronCloseBtn');
     if (closeBtn && window.electronAPI && window.electronAPI.closeWindow) {
         closeBtn.addEventListener('click', () => {
             window.electronAPI.closeWindow();
+        });
+    }
+
+    // Intercept external links and use Electron API
+    document.querySelectorAll('a[target="_blank"], a.external-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (window.electronAPI && link.href) {
+                window.electronAPI.openExternal(link.href);
+            }
+        });
+    });
+
+    // Example: Add Chapters button
+    const addChapterBtn = document.getElementById('addChapterBtn');
+    if (addChapterBtn) {
+        addChapterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            addChapter();
+        });
+    }
+
+    // Example: View button
+    const viewBtn = document.getElementById('viewBtn');
+    if (viewBtn) {
+        viewBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Implement your view logic here
+        });
+    }
+
+    // Example: Info button
+    const infoBtn = document.getElementById('infoBtn');
+    if (infoBtn) {
+        infoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Implement your info logic here
+        });
+    }
+
+    // Example: Add Dictionary button
+    const addDictBtn = document.getElementById('addDictBtn');
+    if (addDictBtn) {
+        addDictBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Implement your add dictionary logic here
         });
     }
 });
@@ -1962,20 +2035,21 @@ function setupBookEditorUI() {
 
 
 function addChapter() {
-    const newTitle = prompt('Enter chapter title:', `Chapter ${book.chapters.length + 1}`);
-    if (!newTitle || !newTitle.trim()) return;
-    // Add chapter with NO paragraphs by default
-    book.chapters.push({ title: newTitle.trim(), paragraphs: [] });
-    book.currentChapter = book.chapters.length - 1;
-    book.currentParagraph = 0;
-    book.currentSection = 'chapters';
-    renderChapters();
-    renderParagraphs();
-    renderFrontMatter();
-    renderBackMatter();
-    // Do not select a paragraph since none exist yet
-    selectChapter(book.currentChapter, null);
-    autosaveBook();
+    showInputModal('Enter chapter title:', `Chapter ${book.chapters.length + 1}`, function(newTitle) {
+        if (!newTitle) return;
+        // Add chapter with NO paragraphs by default
+        book.chapters.push({ title: newTitle.trim(), paragraphs: [] });
+        book.currentChapter = book.chapters.length - 1;
+        book.currentParagraph = 0;
+        book.currentSection = 'chapters';
+        renderChapters();
+        renderParagraphs();
+        renderFrontMatter();
+        renderBackMatter();
+        // Do not select a paragraph since none exist yet
+        selectChapter(book.currentChapter, null);
+        autosaveBook();
+    });
 }
 
 // ========================================
@@ -2660,12 +2734,13 @@ function renderReferences() {
 }
 
 function addReference() {
-    const text = prompt('Enter reference (e.g., Author, Title, Year, Publisher):');
-    if (!text || !text.trim()) return;
-    if (!book.references) book.references = [];
-    book.references.push({ text: text.trim() });
-    renderReferences();
-    autosaveBook();
+    showInputModal('Enter reference (e.g., Author, Title, Year, Publisher):', '', function(text) {
+        if (!text || !text.trim()) return;
+        if (!book.references) book.references = [];
+        book.references.push({ text: text.trim() });
+        renderReferences();
+        autosaveBook();
+    });
 }
 
 function insertCitationPrompt() {
@@ -3982,6 +4057,15 @@ if (editor) {
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
+    // Intercept Info/View links for Electron navigation
+    document.querySelectorAll('a.mega-menu-trigger').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (link.href) {
+                window.location.href = link.getAttribute('href');
+            }
+        });
+    });
     if (!editor) editor = document.getElementById('richEditor') || document.getElementById('editor');
     if (editor) {
         editor.addEventListener('contextmenu', function(e) {

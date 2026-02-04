@@ -1,4 +1,4 @@
-const { ipcMain } = require('electron');
+const { ipcMain, shell } = require('electron');
 
 ipcMain.on('close-window', () => {
     if (mainWindow) mainWindow.close();
@@ -15,37 +15,69 @@ ipcMain.on('maximize-window', () => {
         }
     }
 });
+// Handle open-external-link from renderer
+ipcMain.on('open-external-link', (event, url) => {
+    if (url) shell.openExternal(url);
+});
 const { app, BrowserWindow, Menu, dialog } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 
 let mainWindow = null;
-let splash = null;
+let windowCreated = false;
 let backendProcess = null;
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = true; // Force development mode for local testing
 const BACKEND_PORT = 5000;
-const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
-const BACKEND_EXE = isDev ? 'python' : path.join(process.resourcesPath, 'GirminTok.exe');
+const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
+const BACKEND_EXE = isDev ? 'python' : path.resolve(__dirname, 'dist', 'win-unpacked', 'GirminTok.exe');
 const BACKEND_SCRIPT = 'app.py';
 
 function startBackend() {
+    console.log('[Electron] Starting backend...');
+    console.log(`[Electron] isDev: ${isDev}`);
+    console.log(`[Electron] Backend exe: ${BACKEND_EXE}`);
+    console.log(`[Electron] Backend script: ${BACKEND_SCRIPT}`);
+    console.log(`[Electron] Backend cwd: ${__dirname}`);
+    let spawnOpts;
     if (isDev) {
-        backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], {
+        spawnOpts = {
             cwd: __dirname,
             shell: true,
-            stdio: 'ignore',
+            stdio: ['pipe', 'pipe', 'pipe'],
             detached: true
-        });
+        };
+        backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], spawnOpts);
     } else {
-        backendProcess = spawn(BACKEND_EXE, [], {
+        spawnOpts = {
             cwd: process.resourcesPath,
             shell: true,
-            stdio: 'ignore',
+            stdio: ['pipe', 'pipe', 'pipe'],
             detached: true
-        });
+        };
+        backendProcess = spawn(BACKEND_EXE, [], spawnOpts);
     }
-    if (backendProcess) backendProcess.unref();
+    if (backendProcess) {
+        backendProcess.unref();
+        if (backendProcess.stdout) {
+            backendProcess.stdout.on('data', (data) => {
+                console.log(`[Backend stdout]: ${data.toString()}`);
+            });
+        }
+        if (backendProcess.stderr) {
+            backendProcess.stderr.on('data', (data) => {
+                console.error(`[Backend stderr]: ${data.toString()}`);
+            });
+        }
+        backendProcess.on('error', (err) => {
+            console.error('[Electron] Backend process error:', err);
+        });
+        backendProcess.on('exit', (code, signal) => {
+            console.log(`[Electron] Backend process exited with code ${code}, signal ${signal}`);
+        });
+    } else {
+        console.error('[Electron] Failed to spawn backend process!');
+    }
 }
 
 function stopBackend() {
@@ -63,6 +95,8 @@ function stopBackend() {
 }
 
 function createWindow() {
+    if (windowCreated) return;
+    windowCreated = true;
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -75,7 +109,6 @@ function createWindow() {
     });
 
     mainWindow.once('ready-to-show', () => {
-        if (splash) splash.close();
         mainWindow.show();
     });
 
@@ -86,35 +119,30 @@ function createWindow() {
     mainWindow.loadURL(BACKEND_URL);
 }
 
-function showSplash() {
-    splash = new BrowserWindow({
-        width: 400,
-        height: 300,
-        frame: false,
-        alwaysOnTop: true,
-        transparent: true,
-        resizable: false
-    });
-    splash.loadFile(path.join(__dirname, 'ui', 'welcome.html'));
-}
-
 function waitForFlask(retries = 30) {
     const http = require('http');
     const tryConnect = () => {
+        console.log(`[Electron] Attempting to connect to Flask backend at ${BACKEND_URL} (retries left: ${retries})`);
         http.get(BACKEND_URL, res => {
             if (res.statusCode === 200) {
+                console.log('[Electron] Flask backend is up!');
                 createWindow();
             } else {
+                console.warn(`[Electron] Unexpected status code from backend: ${res.statusCode}`);
                 retry();
             }
-        }).on('error', retry);
+        }).on('error', (err) => {
+            console.warn(`[Electron] Error connecting to backend: ${err.message}`);
+            retry();
+        });
     };
     const retry = () => {
-        if (retries > 0) {
+        if (!windowCreated && retries > 0) {
             setTimeout(() => {
                 waitForFlask(retries - 1);
             }, 500);
-        } else {
+        } else if (!windowCreated) {
+            console.error('[Electron] Failed to start backend server after multiple attempts.');
             dialog.showErrorBox('Error', 'Failed to start backend server.');
             app.quit();
         }
@@ -161,7 +189,6 @@ function setAppMenu() {
 }
 
 app.on('ready', () => {
-    showSplash();
     startBackend();
     waitForFlask();
     setAppMenu();

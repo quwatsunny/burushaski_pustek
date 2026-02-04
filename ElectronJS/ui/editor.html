@@ -223,13 +223,26 @@
         </div>
     </div>
 
-    <script src="assets/js/editor.js"></script>
-    <script>
-    // Focus fade effect for the whole interface
-    const body = document.body;
-    // Removed duplicate editor variable declaration; handled in editor.js
-    // Disabled focus-fade overlay to prevent editor from being unclickable
-    </script>
+
+        <!-- Input Modal for Electron (replaces prompt) -->
+        <div id="inputModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
+            <div style="background:#fff; padding:24px; border-radius:8px; min-width:300px; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+                <div id="inputModalLabel" style="margin-bottom:12px; font-size:16px;"></div>
+                <input id="inputModalField" type="text" style="width:100%; padding:8px; font-size:15px; margin-bottom:16px;">
+                <div style="text-align:right;">
+                    <button id="inputModalCancel" style="margin-right:8px;">Cancel</button>
+                    <button id="inputModalOk">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="assets/js/editor.js"></script>
+        <script>
+        // Focus fade effect for the whole interface
+        const body = document.body;
+        // Removed duplicate editor variable declaration; handled in editor.js
+        // Disabled focus-fade overlay to prevent editor from being unclickable
+        </script>
 </body>
 </html>
 
