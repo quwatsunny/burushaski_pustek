@@ -34,15 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Intercept external links and use Electron API
-    document.querySelectorAll('a[target="_blank"], a.external-link').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (window.electronAPI && link.href) {
-                window.electronAPI.openExternal(link.href);
-            }
-        });
-    });
+    // Allow all links to open within Electron (no interception)
 
     // Example: Add Chapters button
     const addChapterBtn = document.getElementById('addChapterBtn');
@@ -71,12 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Example: Add Dictionary button
-    const addDictBtn = document.getElementById('addDictBtn');
-    if (addDictBtn) {
-        addDictBtn.addEventListener('click', function(e) {
+    // Add Dictionary link handler for Electron
+    const addDictionaryLink = document.getElementById('addDictionaryLink');
+    if (addDictionaryLink) {
+        addDictionaryLink.addEventListener('click', function(e) {
             e.preventDefault();
-            // Implement your add dictionary logic here
+            window.location.href = addDictionaryLink.href;
         });
     }
 });
@@ -1748,15 +1740,16 @@ function addParagraphToChapter(chIdx) {
     const chapter = book.chapters[chIdx];
     if (!chapter) return;
     if (!chapter.paragraphs) chapter.paragraphs = [];
-    const newTitle = prompt('Enter paragraph title:', `Paragraph ${chapter.paragraphs.length + 1}`);
-    if (!newTitle || !newTitle.trim()) return;
-    chapter.paragraphs.push({ title: newTitle.trim(), content: '' });
-    book.currentChapter = chIdx;
-    book.currentParagraph = chapter.paragraphs.length - 1;
-    expandedChapters[chIdx] = true;
-    renderChapters();
-    selectChapter(chIdx, book.currentParagraph);
-    autosaveBook();
+    showInputModal('Enter paragraph title:', `Paragraph ${chapter.paragraphs.length + 1}`, function(newTitle) {
+        if (!newTitle || !newTitle.trim()) return;
+        chapter.paragraphs.push({ title: newTitle.trim(), content: '' });
+        book.currentChapter = chIdx;
+        book.currentParagraph = chapter.paragraphs.length - 1;
+        expandedChapters[chIdx] = true;
+        renderChapters();
+        selectChapter(chIdx, book.currentParagraph);
+        autosaveBook();
+    });
 }
 
 function addParagraphToCurrent() {
@@ -2881,16 +2874,17 @@ function editFootnote(idx) {
     if (!chapter || !chapter.footnotes) return;
     const fn = chapter.footnotes[idx];
     if (!fn) return;
-    const newText = prompt('Edit footnote:', fn.text);
-    if (newText && newText.trim()) {
-        chapter.footnotes[idx].text = newText.trim();
-        // Update marker tooltips
-        const richEditor = document.getElementById('richEditor');
-        const markers = richEditor.querySelectorAll(`.footnote-marker[data-fn-idx="${idx}"]`);
-        markers.forEach(m => m.title = newText.trim());
-        renderFootnotes();
-        autosaveBook();
-    }
+    showInputModal('Edit footnote:', fn.text, function(newText) {
+        if (newText && newText.trim()) {
+            chapter.footnotes[idx].text = newText.trim();
+            // Update marker tooltips
+            const richEditor = document.getElementById('richEditor');
+            const markers = richEditor.querySelectorAll(`.footnote-marker[data-fn-idx="${idx}"]`);
+            markers.forEach(m => m.title = newText.trim());
+            renderFootnotes();
+            autosaveBook();
+        }
+    });
 }
 
 function deleteFootnote(idx) {
