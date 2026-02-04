@@ -2837,34 +2837,38 @@ function renderFootnotes() {
 }
 
 function insertFootnote() {
-    const text = prompt('Enter footnote text:');
-    if (!text || !text.trim()) return;
-    const chapter = book.chapters[book.currentChapter];
-    if (!chapter) return;
-    if (!chapter.footnotes) chapter.footnotes = [];
-    const fnIdx = chapter.footnotes.length;
-    chapter.footnotes.push({ text: text.trim() });
-    // Insert footnote marker in editor
-    const richEditor = document.getElementById('richEditor');
-    richEditor.focus();
-    const marker = document.createElement('sup');
-    marker.className = 'footnote-marker';
-    marker.contentEditable = 'false';
-    marker.innerHTML = `${fnIdx + 1}`;
-    marker.title = text.trim();
-    marker.dataset.fnIdx = fnIdx;
-    const sel = window.getSelection();
-    if (sel.rangeCount > 0) {
-        const range = sel.getRangeAt(0);
-        range.deleteContents();
-        range.insertNode(marker);
-        range.setStartAfter(marker);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
-    }
-    renderFootnotes();
-    autosaveBook();
+    showInputModal('Enter footnote text:', '', function(text) {
+        if (!text || !text.trim()) return;
+        const chapter = book.chapters[book.currentChapter];
+        if (!chapter) {
+            alert('No chapter selected. Please select or add a chapter first.');
+            return;
+        }
+        if (!chapter.footnotes) chapter.footnotes = [];
+        const fnIdx = chapter.footnotes.length;
+        chapter.footnotes.push({ text: text.trim() });
+        // Insert footnote marker in editor
+        const richEditor = document.getElementById('richEditor');
+        richEditor.focus();
+        const marker = document.createElement('sup');
+        marker.className = 'footnote-marker';
+        marker.contentEditable = 'false';
+        marker.innerHTML = `${fnIdx + 1}`;
+        marker.title = text.trim();
+        marker.dataset.fnIdx = fnIdx;
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(marker);
+            range.setStartAfter(marker);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        renderFootnotes();
+        autosaveBook();
+    });
 }
 
 function editFootnote(idx) {
