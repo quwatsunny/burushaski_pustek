@@ -32,8 +32,10 @@ let backendProcess = null;
 const isDev = process.env.NODE_ENV === 'development' || process.env.ELECTRON_IS_DEV === '1';
 const BACKEND_PORT = 5000;
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
-// In production, girmintok.exe should be in resources/app or resources/ depending on packager
-const BACKEND_EXE = isDev ? 'python' : path.join(process.resourcesPath, 'girmintok.exe');
+// In production, use Python executable from venv, otherwise use system python
+const BACKEND_EXE = isDev
+    ? 'python'
+    : path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe');
 const BACKEND_SCRIPT = 'app.py';
 
 function startBackend() {
@@ -52,14 +54,14 @@ function startBackend() {
         };
         backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], spawnOpts);
     } else {
-        // In production, girmintok.exe is in resourcesPath
+        // In production, use Python from venv to run app.py
         spawnOpts = {
-            cwd: process.resourcesPath,
+            cwd: __dirname,
             shell: true,
             stdio: ['pipe', 'pipe', 'pipe'],
             detached: true
         };
-        backendProcess = spawn(BACKEND_EXE, [], spawnOpts);
+        backendProcess = spawn(BACKEND_EXE, [BACKEND_SCRIPT], spawnOpts);
     }
     if (backendProcess) {
         backendProcess.unref();
